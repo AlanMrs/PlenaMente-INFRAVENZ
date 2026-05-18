@@ -36,4 +36,27 @@ class Usuario {
         return $stmt->execute();
     }
 }
+
+    // Actualizar los datos del usuario
+    public function actualizarUsuario($id, $id_rol, $nombre_completo, $correo, $estado, $password_hash = null) {
+        // Si nos enviaron una contraseña nueva, la actualizamos. Si no, la dejamos igual.
+        if ($password_hash) {
+            $sql = "UPDATE usuarios SET id_rol = :id_rol, nombre_completo = :nombre, correo = :correo, estado = :estado, password_hash = :pass WHERE id_usuario = :id";
+        } else {
+            $sql = "UPDATE usuarios SET id_rol = :id_rol, nombre_completo = :nombre, correo = :correo, estado = :estado WHERE id_usuario = :id";
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_rol', $id_rol);
+        $stmt->bindValue(':nombre', $nombre_completo);
+        $stmt->bindValue(':correo', $correo);
+        $stmt->bindValue(':estado', $estado);
+        $stmt->bindValue(':id', $id);
+        
+        if ($password_hash) {
+            $stmt->bindValue(':pass', $password_hash);
+        }
+        
+        return $stmt->execute();
+    }
 ?>
