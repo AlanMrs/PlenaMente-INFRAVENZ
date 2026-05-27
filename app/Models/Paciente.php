@@ -12,12 +12,14 @@ class Paciente {
         $this->db = (new Database())->getConnection();
     }
 
-    // Obtener todos los registros de la tabla pacientes
+    // Obtener todos los pacientes detectando si ya tienen expediente
     public function obtenerTodos() {
-        $sql = "SELECT * FROM pacientes ORDER BY id_paciente DESC";
+        $sql = "SELECT p.*, e.id_expediente 
+                FROM pacientes p 
+                LEFT JOIN expedientes e ON p.id_paciente = e.id_paciente 
+                ORDER BY p.id_paciente DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
-        
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -45,20 +47,28 @@ class Paciente {
         return $stmt->execute();
     }
 
-    // Buscar pacientes por NIE/DUI, nombres o apellidos 
+    // Buscar pacientes detectando si ya tienen expediente
     public function buscarPacientes($termino) {
-        $sql = "SELECT * FROM pacientes 
-                WHERE nie_dui LIKE :termino 
-                OR nombres LIKE :termino 
-                OR apellidos LIKE :termino 
-                ORDER BY id_paciente DESC";
+        $sql = "SELECT p.*, e.id_expediente 
+                FROM pacientes p 
+                LEFT JOIN expedientes e ON p.id_paciente = e.id_paciente 
+                WHERE p.nie_dui LIKE :termino 
+                OR p.nombres LIKE :termino 
+                OR p.apellidos LIKE :termino 
+                ORDER BY p.id_paciente DESC";
                 
         $stmt = $this->db->prepare($sql);
-        
         $stmt->bindValue(':termino', '%' . $termino . '%');
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function obtenerPorId($id) {
+        $stmt = $this->db->prepare("SELECT * FROM pacientes WHERE id_paciente = :id");
+        $stmt->bindValue(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 }
 ?>

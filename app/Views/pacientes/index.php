@@ -29,7 +29,7 @@
                 <th>Tipo</th>
                 <th>Grado/Sección</th>
                 <th>Contacto</th>
-                <th>Acciones</th>
+                <th style="text-align: center;">Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -44,8 +44,22 @@
                 </td>
                 <td><?php echo $p['grado_seccion'] ? htmlspecialchars($p['grado_seccion']) : '<span style="color:#999;">N/A</span>'; ?></td>
                 <td><?php echo $p['telefono_contacto'] ? htmlspecialchars($p['telefono_contacto']) : '<span style="color:#999;">Sin registrar</span>'; ?></td>
-                <td>
-                  <!--  <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">Ver Ficha</button> -->
+                <td style="text-align: center;">
+                    <?php if (!empty($p['id_expediente'])): ?>
+                        <a href="<?php echo BASE_URL; ?>/expediente/ver/<?php echo $p['id_expediente']; ?>" 
+                           title="Ver Expediente Clínico"
+                           class="btn btn-primary"
+                           style="background-color: var(--violeta-principal); color: white; padding: 6px 12px; font-size: 12px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                           👁️ Ver Exp
+                        </a>
+                    <?php else: ?>
+                        <a href="<?php echo BASE_URL; ?>/expediente/crear/<?php echo $p['id_paciente']; ?>" 
+                           title="Abrir Expediente Clínico"
+                           class="btn btn-primary"
+                           style="padding: 6px 12px; font-size: 12px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                           ➕ Abrir Exp
+                        </a>
+                    <?php endif; ?>
                 </td>
             </tr>
             <?php endforeach; ?>
