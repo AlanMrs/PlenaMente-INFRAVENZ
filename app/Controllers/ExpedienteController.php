@@ -54,4 +54,56 @@ class ExpedienteController extends Controller {
             }
         }
     }
+
+    public function ver($id) {
+        // Inicializamos el modelo directamente usando el método nativo de tu framework
+        $modeloExpediente = $this->modelo('Expediente');
+        
+        // 1. Buscamos el expediente con los datos del paciente
+        $expediente = $modeloExpediente->obtenerPorId($id);
+        
+        // Si el expediente no existe, redirigimos al listado de pacientes con un aviso
+        if (!$expediente) {
+            header("Location: " . BASE_URL . "/paciente?error=no_encontrado");
+            exit();
+        }
+        
+        // 2. Buscamos todas las sesiones clínicas de este expediente
+        $sesiones = $modeloExpediente->obtenerSesionesPorExpediente($id);
+        
+        // 3. Cargamos la vista enviando ambos flujos de datos de forma directa
+        $this->vista('expedientes/ver', [
+            'expediente' => $expediente,
+            'sesiones'   => $sesiones
+        ]);
+    }
+
+    // Mostrar formulario de nueva sesión
+    public function nueva_sesion($id_expediente) {
+        $modeloExpediente = $this->modelo('Expediente');
+        $expediente = $modeloExpediente->obtenerPorId($id_expediente);
+
+        $this->vista('expedientes/nueva_sesion', [
+            'expediente' => $expediente
+        ]);
+    }
+
+    // Procesar el guardado de la sesión
+    public function guardar_sesion() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $id_expediente = $_POST['id_expediente'];
+            $observaciones = trim($_POST['observaciones_generales']);
+            $intervencion  = trim($_POST['intervencion_realizada']);
+            $notas         = trim($_POST['notas_evolucion']);
+
+            $modeloExpediente = $this->modelo('Expediente');
+            $exito = $modeloExpediente->guardarSesion($id_expediente, $observaciones, $intervencion, $notas);
+
+            if ($exito) {
+                header('Location: ' . BASE_URL . '/expediente/ver/' . $id_expediente . '?success=sesion_guardada');
+            } else {
+                echo "Error al guardar la sesión.";
+            }
+        }
+    }
 }

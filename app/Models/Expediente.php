@@ -46,4 +46,44 @@ class Expediente {
         
         return $stmt->execute();
     }
+
+    // 4. Obtener un expediente específico por su ID con todos los datos detallados del paciente
+    public function obtenerPorId($id_expediente) {
+        $sql = "SELECT e.*, p.nie_dui, p.nombres, p.apellidos, p.tipo_paciente, 
+                       p.grado_seccion, p.telefono_contacto, p.correo_paciente, 
+                       p.genero, p.fecha_nacimiento, p.nombre_responsable
+                FROM expedientes e
+                INNER JOIN pacientes p ON e.id_paciente = p.id_paciente
+                WHERE e.id_expediente = :id_expediente LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_expediente', $id_expediente);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // 5. Obtener todas las sesiones clínicas asociadas a este expediente
+    public function obtenerSesionesPorExpediente($id_expediente) {
+        $sql = "SELECT * FROM sesiones_clinicas 
+                WHERE id_expediente = :id_expediente 
+                ORDER BY fecha_registro DESC, id_sesion DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_expediente', $id_expediente);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // 6. Guardar una nueva sesión clínica (Soportando creación directa sin cita)
+    public function guardarSesion($id_expediente, $observaciones, $intervencion, $notas) {
+        // Insertamos NULL en id_cita ya que esta sesión nace directo del expediente
+        $sql = "INSERT INTO sesiones_clinicas (id_cita, id_expediente, observaciones_generales, intervencion_realizada, notas_evolucion, fecha_registro) 
+                VALUES (NULL, :id_expediente, :observaciones, :intervencion, :notas, NOW())";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_expediente', $id_expediente);
+        $stmt->bindValue(':observaciones', $observaciones);
+        $stmt->bindValue(':intervencion', $intervencion);
+        $stmt->bindValue(':notas', $notas);
+        
+        return $stmt->execute();
+    }
 }
