@@ -81,9 +81,15 @@
                         <div style="position: absolute; width: 12px; height: 12px; background: var(--violeta-principal); border: 3px solid white; border-radius: 50%; left: -29px; top: 5px; box-shadow: 0 0 0 2px var(--violeta-principal);"></div>
                         
                         <div style="background: #fdfdfd; border: 1px solid #eaeaea; border-radius: 6px; padding: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                <span style="font-weight: bold; color: #333;">Sesión Clínica #<?php echo count($sesiones) - $index; ?></span>
-                                <span style="font-size: 13px; color: #777; font-weight: bold; background: #eee; padding: 2px 8px; border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-weight: bold; color: #333;">Sesión Clínica #<?php echo count($sesiones) - $index; ?></span>
+                                    
+                                    <span style="background: #e3f2fd; color: #0d47a1; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #bbdefb; white-space: nowrap;">
+                                        💼 <?php echo htmlspecialchars($sesion['tipo_consulta'] ?? 'Seguimiento'); ?>
+                                    </span>
+                                </div>
+                                <span style="font-size: 13px; color: #777; font-weight: bold; background: #eee; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">
                                     📅 <?php echo date('d/m/Y', strtotime($sesion['fecha_registro'])); ?>
                                 </span>
                             </div>

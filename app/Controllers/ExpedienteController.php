@@ -121,24 +121,28 @@ class ExpedienteController extends Controller {
     public function guardar_sesion() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id_expediente = $_POST['id_expediente'];
-            $id_cita       = $_POST['id_cita'] ?? null; // Recibe el ID oculto de la cita
+            
+            // BLINDAJE: Si id_cita viene vacío de la vista, lo convertimos en un NULL real de PHP
+            $id_cita = (!empty($_POST['id_cita'])) ? $_POST['id_cita'] : null;
+            
+            $tipo_consulta = $_POST['tipo_consulta']; 
             $observaciones = trim($_POST['observaciones_generales']);
             $intervencion  = trim($_POST['intervencion_realizada']);
-            $notes         = trim($_POST['notas_evolucion']);
+            $notas         = trim($_POST['notas_evolucion']);
 
             $modeloExpediente = $this->modelo('Expediente');
             
-            // Guardamos la sesión mandando el id_cita (será un número o null)
-            $exito = $modeloExpediente->guardarSesion($id_expediente, $observaciones, $intervencion, $notes, $id_cita);
+            // Enviamos las variables limpias al modelo
+            $exito = $modeloExpediente->guardarSesion($id_expediente, $tipo_consulta, $observaciones, $intervencion, $notas, $id_cita);
 
             if ($exito) {
-                // Si la sesión provino de una cita de la agenda, cambiamos el estado de esa cita a "Atendida"
                 if (!empty($id_cita)) {
                     $modeloExpediente->marcarCitaComoAtendida($id_cita);
                 }
                 header('Location: ' . BASE_URL . '/expediente/ver/' . $id_expediente . '?success=sesion_guardada');
+                exit();
             } else {
-                echo "Error al guardar la sesión.";
+                echo "Error al guardar la sesión clínica.";
             }
         }
     }

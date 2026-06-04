@@ -17,6 +17,19 @@
             <input type="hidden" name="id_cita" value="<?php echo $id_cita ?? ''; ?>">
 
             <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: bold;">Clasificación de la Consulta:</label>
+                <select name="tipo_consulta" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background-color: #f9f9f9;">
+                    <option value="">-- Seleccione el tipo de atención --</option>
+                    <option value="Evaluación Inicial">📋 Evaluación Inicial / Primera Vez</option>
+                    <option value="Seguimiento">🔄 Seguimiento Psicológico</option>
+                    <option value="Intervención en Crisis">🚨 Intervención en Crisis</option>
+                    <option value="Orientación">🗣️ Orientación / Consejería</option>
+                    <option value="Terapia Individual">🛋️ Terapia Individual</option>
+                    <option value="Derivación">➡️ Derivación a otra especialidad</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 8px; font-weight: bold;">Observaciones Generales:</label>
                 <textarea name="observaciones_generales" rows="3" required placeholder="Describa el estado inicial del paciente en esta sesión..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif;"></textarea>
             </div>

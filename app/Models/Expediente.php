@@ -72,15 +72,15 @@ class Expediente {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 6. Guardar una nueva sesión clínica (Soportando de forma opcional el id_cita)
-    public function guardarSesion($id_expediente, $observaciones, $intervencion, $notas, $id_cita = null) {
-        $sql = "INSERT INTO sesiones_clinicas (id_cita, id_expediente, observaciones_generales, intervencion_realizada, notas_evolucion, fecha_registro) 
-                VALUES (:id_cita, :id_expediente, :observaciones, :intervencion, :notas, NOW())";
+    // 6. Guardar una nueva sesión clínica (Ahora con tipo_consulta)
+    public function guardarSesion($id_expediente, $tipo_consulta, $observaciones, $intervencion, $notas, $id_cita = null) {
+        $sql = "INSERT INTO sesiones_clinicas (id_cita, id_expediente, tipo_consulta, observaciones_generales, intervencion_realizada, notas_evolucion, fecha_registro) 
+                VALUES (:id_cita, :id_expediente, :tipo_consulta, :observaciones, :intervencion, :notas, NOW())";
         
         $stmt = $this->db->prepare($sql);
-        // Si id_cita es vacío o null, guardamos un NULL real de base de datos
         $stmt->bindValue(':id_cita', !empty($id_cita) ? $id_cita : null, !empty($id_cita) ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmt->bindValue(':id_expediente', $id_expediente);
+        $stmt->bindValue(':tipo_consulta', $tipo_consulta); // Vinculamos el nuevo campo
         $stmt->bindValue(':observaciones', $observaciones);
         $stmt->bindValue(':intervencion', $intervencion);
         $stmt->bindValue(':notas', $notas);
@@ -99,9 +99,10 @@ class Expediente {
 
     // 8. Actualizar el estado de la cita a 'Atendida'
     public function marcarCitaComoAtendida($id_cita) {
-        $sql = "UPDATE citas SET estado = 'Atendida' WHERE id_cita = :id_cita";
+        // CORREGIDO: estado_cita y 'Completada' para que coincida con tu base de datos
+        $sql = "UPDATE citas SET estado_cita = 'Completada' WHERE id_cita = :id_cita";
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':id_cita', $id_cita);
+        $stmt->bindValue(':id_cita', $id_cita, PDO::PARAM_INT);
         return $stmt->execute();
     }
 }

@@ -19,7 +19,7 @@
             <a href="<?php echo BASE_URL; ?>/cita" class="menu-item">📅 Citas</a>
             <a href="<?php echo BASE_URL; ?>/sesion" class="menu-item">📋 Consultas</a>
             <a href="<?php echo BASE_URL; ?>/expediente" class="menu-item">📁 Expedientes</a>
-          <!--  <a href="<?php echo BASE_URL; ?>/reportes" class="menu-item">📄 Informes</a> -->
+            <a href="<?php echo BASE_URL; ?>/reportes" class="menu-item">📄 Informes</a> 
             <a href="<?php echo BASE_URL; ?>/usuario" class="menu-item">🔐 Usuarios</a>
           <!--  <a href="<?php echo BASE_URL; ?>/configuracion" class="menu-item">⚙️ Configuración</a> -->
             <a href="<?php echo BASE_URL; ?>/auth/logout" class="menu-item" style="color: #d32f2f; margin-top: 20px; border-top: 1px solid var(--gris-claro);">
