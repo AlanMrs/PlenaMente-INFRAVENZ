@@ -72,18 +72,36 @@ class Expediente {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 6. Guardar una nueva sesión clínica (Soportando creación directa sin cita)
-    public function guardarSesion($id_expediente, $observaciones, $intervencion, $notas) {
-        // Insertamos NULL en id_cita ya que esta sesión nace directo del expediente
+    // 6. Guardar una nueva sesión clínica (Soportando de forma opcional el id_cita)
+    public function guardarSesion($id_expediente, $observaciones, $intervencion, $notas, $id_cita = null) {
         $sql = "INSERT INTO sesiones_clinicas (id_cita, id_expediente, observaciones_generales, intervencion_realizada, notas_evolucion, fecha_registro) 
-                VALUES (NULL, :id_expediente, :observaciones, :intervencion, :notas, NOW())";
+                VALUES (:id_cita, :id_expediente, :observaciones, :intervencion, :notas, NOW())";
         
         $stmt = $this->db->prepare($sql);
+        // Si id_cita es vacío o null, guardamos un NULL real de base de datos
+        $stmt->bindValue(':id_cita', !empty($id_cita) ? $id_cita : null, !empty($id_cita) ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmt->bindValue(':id_expediente', $id_expediente);
         $stmt->bindValue(':observaciones', $observaciones);
         $stmt->bindValue(':intervencion', $intervencion);
         $stmt->bindValue(':notas', $notas);
         
+        return $stmt->execute();
+    }
+
+    // 7. Obtener los datos básicos de una cita (para saber qué paciente la agendó)
+    public function obtenerCitaPorId($id_cita) {
+        $sql = "SELECT * FROM citas WHERE id_cita = :id_cita LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_cita', $id_cita);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // 8. Actualizar el estado de la cita a 'Atendida'
+    public function marcarCitaComoAtendida($id_cita) {
+        $sql = "UPDATE citas SET estado = 'Atendida' WHERE id_cita = :id_cita";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_cita', $id_cita);
         return $stmt->execute();
     }
 }

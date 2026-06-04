@@ -16,9 +16,9 @@
         <nav class="sidebar">
             <a href="<?php echo BASE_URL; ?>/dashboard" class="menu-item active">📊 Dashboard</a> 
             <a href="<?php echo BASE_URL; ?>/paciente" class="menu-item">👥 Pacientes</a>
-          <!--  <a href="<?php echo BASE_URL; ?>/citas" class="menu-item">📅 Citas</a> -->
-          <!--  <a href="<?php echo BASE_URL; ?>/sesiones" class="menu-item">📋 Consultas</a> -->
-          <!--  <a href="<?php echo BASE_URL; ?>/expedientes" class="menu-item">📁 Expedientes</a> -->
+            <a href="<?php echo BASE_URL; ?>/cita" class="menu-item">📅 Citas</a>
+            <a href="<?php echo BASE_URL; ?>/sesion" class="menu-item">📋 Consultas</a>
+            <a href="<?php echo BASE_URL; ?>/expediente" class="menu-item">📁 Expedientes</a>
           <!--  <a href="<?php echo BASE_URL; ?>/reportes" class="menu-item">📄 Informes</a> -->
             <a href="<?php echo BASE_URL; ?>/usuario" class="menu-item">🔐 Usuarios</a>
           <!--  <a href="<?php echo BASE_URL; ?>/configuracion" class="menu-item">⚙️ Configuración</a> -->

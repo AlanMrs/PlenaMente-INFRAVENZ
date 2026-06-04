@@ -14,6 +14,8 @@
         <form action="<?php echo BASE_URL; ?>/expediente/guardar_sesion" method="POST">
             <input type="hidden" name="id_expediente" value="<?php echo $expediente['id_expediente']; ?>">
 
+            <input type="hidden" name="id_cita" value="<?php echo $id_cita ?? ''; ?>">
+
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 8px; font-weight: bold;">Observaciones Generales:</label>
                 <textarea name="observaciones_generales" rows="3" required placeholder="Describa el estado inicial del paciente en esta sesión..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: sans-serif;"></textarea>

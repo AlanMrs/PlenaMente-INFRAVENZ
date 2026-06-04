@@ -78,13 +78,42 @@ class ExpedienteController extends Controller {
         ]);
     }
 
+    // Puente inteligente: Recibe el ID de la cita desde la agenda
+    public function atender_cita($id_cita) {
+        $modeloExpediente = $this->modelo('Expediente');
+        
+        // 1. Buscamos la cita para saber quién es el paciente
+        $cita = $modeloExpediente->obtenerCitaPorId($id_cita);
+        if (!$cita) {
+            header("Location: " . BASE_URL . "/cita?error=cita_no_existe");
+            exit();
+        }
+
+        // 2. Verificamos si ese paciente ya tiene un expediente abierto
+        $expediente = $modeloExpediente->verificarSiExiste($cita['id_paciente']);
+        
+        if (!$expediente) {
+            // Si no tiene expediente, lo mandamos al listado de pacientes con una advertencia
+            header("Location: " . BASE_URL . "/paciente?error=deye_abrir_expediente_primero");
+            exit();
+        }
+
+        // 3. Si ya tiene expediente, lo mandamos directo a registrar la sesión pasando el id_cita por la URL
+        header("Location: " . BASE_URL . "/expediente/nueva_sesion/" . $expediente['id_expediente'] . "?id_cita=" . $id_cita);
+        exit();
+    }
+
     // Mostrar formulario de nueva sesión
     public function nueva_sesion($id_expediente) {
         $modeloExpediente = $this->modelo('Expediente');
         $expediente = $modeloExpediente->obtenerPorId($id_expediente);
+        
+        // Capturamos si viene un id_cita por la URL, si no, queda como null
+        $id_cita = $_GET['id_cita'] ?? null;
 
         $this->vista('expedientes/nueva_sesion', [
-            'expediente' => $expediente
+            'expediente' => $expediente,
+            'id_cita'    => $id_cita
         ]);
     }
 
@@ -92,14 +121,21 @@ class ExpedienteController extends Controller {
     public function guardar_sesion() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id_expediente = $_POST['id_expediente'];
+            $id_cita       = $_POST['id_cita'] ?? null; // Recibe el ID oculto de la cita
             $observaciones = trim($_POST['observaciones_generales']);
             $intervencion  = trim($_POST['intervencion_realizada']);
-            $notas         = trim($_POST['notas_evolucion']);
+            $notes         = trim($_POST['notas_evolucion']);
 
             $modeloExpediente = $this->modelo('Expediente');
-            $exito = $modeloExpediente->guardarSesion($id_expediente, $observaciones, $intervencion, $notas);
+            
+            // Guardamos la sesión mandando el id_cita (será un número o null)
+            $exito = $modeloExpediente->guardarSesion($id_expediente, $observaciones, $intervencion, $notes, $id_cita);
 
             if ($exito) {
+                // Si la sesión provino de una cita de la agenda, cambiamos el estado de esa cita a "Atendida"
+                if (!empty($id_cita)) {
+                    $modeloExpediente->marcarCitaComoAtendida($id_cita);
+                }
                 header('Location: ' . BASE_URL . '/expediente/ver/' . $id_expediente . '?success=sesion_guardada');
             } else {
                 echo "Error al guardar la sesión.";
