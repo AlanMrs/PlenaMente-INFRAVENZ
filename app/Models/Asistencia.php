@@ -1,7 +1,6 @@
 <?php
 namespace App\Models;
 
-// 🟢 Usamos la configuración de base de datos exacta de tu framework
 use App\Config\Database;
 use PDO;
 
@@ -9,19 +8,28 @@ class Asistencia {
     private $db;
 
     public function __construct() {
-        // Conectamos a la base de datos exactamente igual que en Expediente.php
         $this->db = (new Database())->getConnection();
     }
 
-    // Obtiene todos los expedientes haciendo INNER JOIN con pacientes para ver nombres,
-    // y un LEFT JOIN con asistencias si ya fue registrada ese día
-    public function obtenerPacientesConAsistencia($fecha) {
-        $sql = "SELECT e.id_expediente, p.nombres, p.apellidos, p.tipo_paciente, p.nie_dui,
-                       a.estado, a.observaciones
+    // 1. Cargar expedientes para el menú desplegable del formulario
+    public function obtenerExpedientesDisponibles() {
+        $sql = "SELECT e.id_expediente, p.nombres, p.apellidos, p.nie_dui, p.tipo_paciente
                 FROM expedientes e
                 INNER JOIN pacientes p ON e.id_paciente = p.id_paciente
-                LEFT JOIN asistencias a ON e.id_expediente = a.id_expediente AND a.fecha_asistencia = :fecha
                 ORDER BY p.apellidos ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // 2. Obtener SOLO las asistencias ya registradas en una fecha específica
+    public function obtenerAsistenciasPorFecha($fecha) {
+        $sql = "SELECT a.estado, a.observaciones, e.id_expediente, p.nombres, p.apellidos, p.nie_dui, p.tipo_paciente
+                FROM asistencias a
+                INNER JOIN expedientes e ON a.id_expediente = e.id_expediente
+                INNER JOIN pacientes p ON e.id_paciente = p.id_paciente
+                WHERE a.fecha_asistencia = :fecha
+                ORDER BY a.fecha_registro DESC"; // Suponiendo que tengas fecha_registro, o quita el order by
         
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':fecha', $fecha);
@@ -29,7 +37,7 @@ class Asistencia {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Guarda o actualiza la asistencia de un paciente en una fecha específica
+    // 3. Guardar o actualizar la asistencia individual
     public function registrarAsistencia($id_expediente, $fecha, $estado, $observaciones) {
         $sql = "INSERT INTO asistencias (id_expediente, fecha_asistencia, estado, observaciones)
                 VALUES (:id_expediente, :fecha, :estado, :observaciones)
@@ -41,7 +49,7 @@ class Asistencia {
         $stmt->bindValue(':estado', $estado);
         $stmt->bindValue(':observaciones', !empty($observaciones) ? trim($observaciones) : null);
         
-        // Parámetros para la actualización si ya existe un registro para esa fecha
+        // Para actualización
         $stmt->bindValue(':estado_update', $estado);
         $stmt->bindValue(':observaciones_update', !empty($observaciones) ? trim($observaciones) : null);
         

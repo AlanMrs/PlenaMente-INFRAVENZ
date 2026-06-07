@@ -1,43 +1,67 @@
 <?php
 namespace App\Controllers;
 
-// 🟢 AGREGAR ESTA LÍNEA: Importa el Controlador base desde el Core de tu sistema
 use App\Core\Controller;
 
 class AsistenciaController extends Controller {
 
-    public function index() {
-        // Si viene una fecha por GET la usa, de lo contrario usa el día de hoy
-        $fecha = $_GET['fecha'] ?? date('Y-m-d');
-        
-        $modeloAsistencia = $this->modelo('Asistencia');
-        $pacientes = $modeloAsistencia->obtenerPacientesConAsistencia($fecha);
+    public function __construct() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
 
-        // Envía los datos a tu vista
+        if (!isset($_SESSION['usuario_id'])) {
+            header('Location: ' . BASE_URL . '/auth/login');
+            exit;
+        }
+
+        // Permitimos entrar a Psicólogo (1) y Director (2)
+        if (!isset($_SESSION['id_rol']) || !in_array($_SESSION['id_rol'], [1, 2])) {
+            header('Location: ' . BASE_URL . '/dashboard');
+            exit;
+        }
+    }
+
+    public function index() {
+        // Obtenemos la fecha seleccionada (por defecto hoy)
+        $fecha = isset($_GET['fecha']) ? $_GET['fecha'] : date('Y-m-d');
+        
+        $asistenciaModel = $this->modelo('Asistencia');
+        
+        // Obtenemos los datos para la vista
+        $asistencias = $asistenciaModel->obtenerAsistenciasPorFecha($fecha);
+        $expedientes = $asistenciaModel->obtenerExpedientesDisponibles();
+
         $this->vista('asistencias/index', [
-            'pacientes' => $pacientes,
-            'fecha' => $fecha
+            'fecha' => $fecha,
+            'asistencias' => $asistencias,
+            'expedientes' => $expedientes
         ]);
     }
 
     public function guardar() {
+        // Solo el Psicólogo puede guardar
+        if ($_SESSION['id_rol'] != 1) {
+            header('Location: ' . BASE_URL . '/asistencia');
+            exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $fecha = $_POST['fecha_asistencia'];
-            $asistencias = $_POST['asistencias'] ?? [];
+            $id_expediente = $_POST['id_expediente'];
+            $estado = $_POST['estado'];
+            $observaciones = $_POST['observaciones'];
 
-            $modeloAsistencia = $this->modelo('Asistencia');
-
-            // Recorremos el lote de asistencias enviado desde la tabla
-            foreach ($asistencias as $id_expediente => $datos) {
-                $estado = $datos['estado'] ?? 'Presente';
-                $observaciones = $datos['observaciones'] ?? '';
-                
-                $modeloAsistencia->registrarAsistencia($id_expediente, $fecha, $estado, $observaciones);
+            $asistenciaModel = $this->modelo('Asistencia');
+            
+            // Registramos a este paciente individual
+            if(!empty($id_expediente) && !empty($estado)) {
+                $asistenciaModel->registrarAsistencia($id_expediente, $fecha, $estado, $observaciones);
             }
 
-            // Redirecciona de vuelta con mensaje de éxito
+            // Redirigimos a la misma fecha
             header('Location: ' . BASE_URL . '/asistencia?fecha=' . $fecha . '&success=1');
-            exit();
+            exit;
         }
     }
 }
