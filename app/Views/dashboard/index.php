@@ -5,60 +5,77 @@
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-label">Citas Hoy</div>
-        <div class="stat-number">8</div>
+        <div class="stat-number"><?php echo htmlspecialchars($citas_hoy); ?></div>
     </div>
     <div class="stat-card" style="background: linear-gradient(135deg, var(--azul-claro), var(--azul-medio));">
         <div class="stat-label">Estudiantes Activos</div>
-        <div class="stat-number">45</div>
+        <div class="stat-number"><?php echo htmlspecialchars($estudiantes_activos); ?></div>
     </div>
     <div class="stat-card" style="background: linear-gradient(135deg, var(--verde-menta), var(--verde-menta-claro));">
         <div class="stat-label">Consultas Mes</div>
-        <div class="stat-number">127</div>
+        <div class="stat-number"><?php echo htmlspecialchars($consultas_mes); ?></div>
     </div>
 </div>
 
+<?php 
+// Obtenemos el rol actual de la sesión
+$id_rol = $_SESSION['id_rol'] ?? 0; 
+?>
+
 <div class="card">
-    <div class="card-header">Próximas Citas</div>
-    <button class="btn btn-primary" style="margin-bottom: 16px;">+ Nueva Cita</button>
+    <div class="card-header">Próximas Citas (Hoy)</div>
+    
+    <?php if($id_rol == 1): ?>
+        <a href="<?php echo BASE_URL; ?>/cita" class="btn btn-primary" style="margin-bottom: 16px; text-decoration: none; display: inline-block;">+ Nueva Cita / Gestionar</a>
+    <?php endif; ?>
     
     <table class="table">
         <thead>
             <tr>
                 <th>Hora</th>
-                <th>Estudiante</th>
+                <th>Paciente</th>
                 <th>Motivo</th>
                 <th>Estado</th>
-                <th>Acciones</th>
+                <?php if($id_rol == 1): ?>
+                    <th>Acciones</th>
+                <?php endif; ?>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>09:00 AM</td>
-                <td>Juan Pérez</td>
-                <td>Seguimiento</td>
-                <td><span class="badge badge-programada">Programada</span></td>
-                <td>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">Ver</button>
-                </td>
-            </tr>
-            <tr>
-                <td>10:30 AM</td>
-                <td>Ana Martínez</td>
-                <td>Primera consulta</td>
-                <td><span class="badge badge-programada">Programada</span></td>
-                <td>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">Ver</button>
-                </td>
-            </tr>
-            <tr>
-                <td>02:00 PM</td>
-                <td>Carlos López</td>
-                <td>Ansiedad académica</td>
-                <td><span class="badge badge-completada">Completada</span></td>
-                <td>
-                    <button class="btn btn-success" style="padding: 6px 12px; font-size: 12px;">Expediente</button>
-                </td>
-            </tr>
+            <?php if (empty($proximas_citas)): ?>
+                <tr>
+                    <td colspan="<?php echo ($id_rol == 1) ? '5' : '4'; ?>" style="text-align: center; color: #888; padding: 20px;">
+                        No hay citas programadas para el día de hoy.
+                    </td>
+                </tr>
+            <?php else: ?>
+                <?php foreach($proximas_citas as $cita): ?>
+                    <tr>
+                        <td><?php echo date('h:i A', strtotime($cita['hora_cita'])); ?></td>
+                        <td><?php echo htmlspecialchars($cita['nombres'] . ' ' . $cita['apellidos']); ?></td>
+                        <td><?php echo htmlspecialchars($cita['motivo_cita'] ?? 'No especificado'); ?></td>
+                        <td>
+                            <?php if($cita['estado_cita'] == 'Programada'): ?>
+                                <span class="badge badge-programada" style="background-color: #007bff; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Programada</span>
+                            <?php elseif($cita['estado_cita'] == 'Completada'): ?>
+                                <span class="badge badge-completada" style="background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Completada</span>
+                            <?php else: ?>
+                                <span class="badge" style="background-color: #6c757d; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;"><?php echo htmlspecialchars($cita['estado_cita']); ?></span>
+                            <?php endif; ?>
+                        </td>
+                        
+                        <?php if($id_rol == 1): ?>
+                            <td>
+                                <?php if(!empty($cita['id_expediente'])): ?>
+                                    <a href="<?php echo BASE_URL; ?>/expediente/ver/<?php echo $cita['id_expediente']; ?>" class="btn btn-success" style="padding: 6px 12px; font-size: 12px; text-decoration: none; color: white; background-color: #20c997; border: none; border-radius: 4px;">Expediente</a>
+                                <?php else: ?>
+                                    <a href="<?php echo BASE_URL; ?>/paciente" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; text-decoration: none; color: white; background-color: #6c757d; border: none; border-radius: 4px;">Ver Paciente</a>
+                                <?php endif; ?>
+                            </td>
+                        <?php endif; ?>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </tbody>
     </table>
 </div>

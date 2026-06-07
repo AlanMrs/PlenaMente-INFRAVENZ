@@ -6,15 +6,33 @@ use App\Core\Controller;
 class DashboardController extends Controller {
 
     public function __construct() {
+        // Aseguramos que la sesión esté activa
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
         if (!isset($_SESSION['usuario_id'])) {
-            // Usamos la nueva constante
             header('Location: ' . BASE_URL . '/auth/login');
             exit;
         }
     }
     
     public function index() {
-        // Si llegó aquí, es porque pasó el constructor con éxito
-        $this->vista('dashboard/index');
+        // 1. Instanciamos el nuevo modelo de Dashboard
+        $dashboardModel = $this->modelo('Dashboard');
+
+        // 2. Extraemos las estadísticas
+        $citasHoy = $dashboardModel->obtenerCitasHoy();
+        $estudiantesActivos = $dashboardModel->obtenerEstudiantesActivos();
+        $consultasMes = $dashboardModel->obtenerConsultasMes();
+        $proximasCitas = $dashboardModel->obtenerProximasCitas();
+
+        // 3. Enviamos todas las variables a la vista
+        $this->vista('dashboard/index', [
+            'citas_hoy' => $citasHoy,
+            'estudiantes_activos' => $estudiantesActivos,
+            'consultas_mes' => $consultasMes,
+            'proximas_citas' => $proximasCitas
+        ]);
     }
 }
