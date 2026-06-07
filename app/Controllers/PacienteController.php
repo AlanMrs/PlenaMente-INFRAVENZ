@@ -5,10 +5,23 @@ use App\Core\Controller;
 
 class PacienteController extends Controller {
 
-    // Protegemos el módulo para que solo entren usuarios con sesión
+    // Protegemos el módulo para que solo entren usuarios con sesión Y con el rol adecuado
     public function __construct() {
+        // Aseguramos que la sesión esté iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // 1. Validar si el usuario NO ha iniciado sesión
         if (!isset($_SESSION['usuario_id'])) {
             header('Location: ' . BASE_URL . '/auth/login');
+            exit;
+        }
+
+        // 2. Validar si el rol NO es el permitido (Blindaje RBAC)
+        if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
+            // Si es un Director o Administrador intentando espiar, lo enviamos al dashboard
+            header('Location: ' . BASE_URL . '/dashboard');
             exit;
         }
     }

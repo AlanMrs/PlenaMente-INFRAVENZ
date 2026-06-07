@@ -7,9 +7,14 @@ class UsuarioController extends Controller {
 
     
     public function __construct() {
-        if (!isset($_SESSION['usuario_id'])) {
-            header('Location: ' . BASE_URL . '/auth/login');
-            exit;
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Si no hay sesión o el rol NO es Administrador, lo enviamos al dashboard
+        if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 3) {
+            header('Location: ' . BASE_URL . '/dashboard');
+            exit();
         }
     }
     

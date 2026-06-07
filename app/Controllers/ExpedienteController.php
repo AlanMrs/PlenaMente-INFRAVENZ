@@ -5,6 +5,22 @@ use App\Core\Controller;
 
 class ExpedienteController extends Controller {
 
+    public function __construct() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['usuario_id'])) {
+            header('Location: ' . BASE_URL . '/auth/login');
+            exit;
+        }
+
+        if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
+            header('Location: ' . BASE_URL . '/dashboard');
+            exit;
+        }
+    }
+
     // Pantalla principal del listado de expedientes
     public function index() {
         $expedienteModel = $this->modelo('Expediente');

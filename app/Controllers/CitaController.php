@@ -6,6 +6,22 @@ use App\Core\Controller;
 
 class CitaController extends Controller {
 
+    public function __construct() {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['usuario_id'])) {
+            header('Location: ' . BASE_URL . '/auth/login');
+            exit;
+        }
+
+        if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
+            header('Location: ' . BASE_URL . '/dashboard');
+            exit;
+        }
+    }
+
     // Listar todas las citas agendadas
     public function index() {
         $modeloCita = $this->modelo('Cita');
