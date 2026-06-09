@@ -1,5 +1,5 @@
 # ==========================================
-# 1. Credenciales y Configuración Sensible
+# Credenciales y Configuración Sensible
 # ==========================================
 # Ignorar el archivo real de conexión a BD para no filtrar contraseñas
 /app/Config/Database.php
@@ -9,13 +9,13 @@
 !.env.example
 
 # ==========================================
-# 2. Dependencias de Terceros
+# Dependencias de Terceros
 # ==========================================
 # Ignorar la carpeta vendor generada por Composer (Ej. PHPMailer, DomPDF)
 /vendor/
 
 # ==========================================
-# 3. Archivos de Logs y Caché
+# Archivos de Logs y Caché
 # ==========================================
 *.log
 /logs/
@@ -23,7 +23,7 @@
 /tmp/
 
 # ==========================================
-# 4. Archivos de Base de Datos
+# Archivos de Base de Datos
 # ==========================================
 # Ignorar cualquier volcado de BD por accidente...
 *.sql
@@ -32,7 +32,7 @@
 !bd_plenamente.sql
 
 # ==========================================
-# 5. Archivos del Sistema Operativo
+# Archivos del Sistema Operativo
 # ==========================================
 .DS_Store
 .DS_Store?
@@ -42,7 +42,7 @@ Thumbs.db
 ehthumbs.db
 
 # ==========================================
-# 6. Configuraciones de Editores de Código (IDE)
+# Configuraciones de Editores de Código (IDE)
 # ==========================================
 /.vscode/
 /.idea/

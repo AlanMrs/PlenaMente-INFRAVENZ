@@ -44,7 +44,7 @@ class ExpedienteController extends Controller {
         }
 
         // Buscamos los datos básicos del paciente para mostrarlos en el formulario
-        $paciente = $pacienteModel->obtenerPorId($id_paciente); // Asegúrate de tener este método en tu Paciente Model
+        $paciente = $pacienteModel->obtenerPorId($id_paciente);
 
         $this->vista('expedientes/crear', [
             'paciente' => $paciente
@@ -75,7 +75,7 @@ class ExpedienteController extends Controller {
         // Inicializamos el modelo directamente usando el método nativo de tu framework
         $modeloExpediente = $this->modelo('Expediente');
         
-        // 1. Buscamos el expediente con los datos del paciente
+        // Buscamos el expediente con los datos del paciente
         $expediente = $modeloExpediente->obtenerPorId($id);
         
         // Si el expediente no existe, redirigimos al listado de pacientes con un aviso
@@ -84,10 +84,10 @@ class ExpedienteController extends Controller {
             exit();
         }
         
-        // 2. Buscamos todas las sesiones clínicas de este expediente
+        // Buscamos todas las sesiones clínicas de este expediente
         $sesiones = $modeloExpediente->obtenerSesionesPorExpediente($id);
         
-        // 3. Cargamos la vista enviando ambos flujos de datos de forma directa
+        // Cargamos la vista enviando ambos flujos de datos de forma directa
         $this->vista('expedientes/ver', [
             'expediente' => $expediente,
             'sesiones'   => $sesiones
@@ -98,14 +98,14 @@ class ExpedienteController extends Controller {
     public function atender_cita($id_cita) {
         $modeloExpediente = $this->modelo('Expediente');
         
-        // 1. Buscamos la cita para saber quién es el paciente
+        // Buscamos la cita para saber quién es el paciente
         $cita = $modeloExpediente->obtenerCitaPorId($id_cita);
         if (!$cita) {
             header("Location: " . BASE_URL . "/cita?error=cita_no_existe");
             exit();
         }
 
-        // 2. Verificamos si ese paciente ya tiene un expediente abierto
+        // Verificamos si ese paciente ya tiene un expediente abierto
         $expediente = $modeloExpediente->verificarSiExiste($cita['id_paciente']);
         
         if (!$expediente) {
@@ -114,7 +114,7 @@ class ExpedienteController extends Controller {
             exit();
         }
 
-        // 3. Si ya tiene expediente, lo mandamos directo a registrar la sesión pasando el id_cita por la URL
+        // Si ya tiene expediente, lo mandamos directo a registrar la sesión pasando el id_cita por la URL
         header("Location: " . BASE_URL . "/expediente/nueva_sesion/" . $expediente['id_expediente'] . "?id_cita=" . $id_cita);
         exit();
     }

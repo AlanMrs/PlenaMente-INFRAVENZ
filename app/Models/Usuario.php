@@ -14,7 +14,6 @@ class Usuario {
 
     // Función para buscar un usuario por su correo electrónico
     public function obtenerPorCorreo($correo) {
-        // Asumimos que tu tabla se llama 'usuarios'
         $query = "SELECT * FROM usuarios WHERE correo = :correo LIMIT 1";
         
         $stmt = $this->db->prepare($query);
@@ -60,7 +59,6 @@ class Usuario {
 
     // Actualizar los datos del usuario
     public function actualizarUsuario($id, $id_rol, $nombre_completo, $correo, $estado, $password_hash = null) {
-        // Si nos enviaron una contraseña nueva, la actualizamos. Si no, la dejamos igual.
         if ($password_hash) {
             $sql = "UPDATE usuarios SET id_rol = :id_rol, nombre_completo = :nombre, correo = :correo, estado = :estado, password_hash = :pass WHERE id_usuario = :id";
         } else {

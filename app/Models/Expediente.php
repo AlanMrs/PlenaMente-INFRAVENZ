@@ -13,7 +13,7 @@ class Expediente {
         $this->db = (new Database())->getConnection();
     }
 
-    // 1. Obtener todos los expedientes haciendo un JOIN con pacientes para ver sus nombres
+    // Obtener todos los expedientes haciendo un JOIN con pacientes para ver sus nombres
     public function obtenerTodos() {
         $sql = "SELECT e.*, p.nie_dui, p.nombres, p.apellidos, p.tipo_paciente 
                 FROM expedientes e
@@ -24,7 +24,7 @@ class Expediente {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 2. Verificar si un paciente ya cuenta con un expediente abierto (Evita duplicados)
+    // Verificar si un paciente ya cuenta con un expediente abierto (Evita duplicados)
     public function verificarSiExiste($id_paciente) {
         $sql = "SELECT id_expediente FROM expedientes WHERE id_paciente = :id_paciente LIMIT 1";
         $stmt = $this->db->prepare($sql);
@@ -33,7 +33,7 @@ class Expediente {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // 3. Crear un nuevo expediente médico/psicológico
+    // Crear un nuevo expediente médico/psicológico
     public function crearExpediente($id_paciente, $fecha_apertura, $antecedentes_familiares, $antecedentes_medicos) {
         $sql = "INSERT INTO expedientes (id_paciente, fecha_apertura, antecedentes_familiares, antecedentes_medicos) 
                 VALUES (:id_paciente, :fecha_apertura, :antecedentes_familiares, :antecedentes_medicos)";
@@ -47,7 +47,7 @@ class Expediente {
         return $stmt->execute();
     }
 
-    // 4. Obtener un expediente específico por su ID con todos los datos detallados del paciente
+    // Obtener un expediente específico por su ID con todos los datos detallados del paciente
     public function obtenerPorId($id_expediente) {
         $sql = "SELECT e.*, p.nie_dui, p.nombres, p.apellidos, p.tipo_paciente, 
                        p.grado_seccion, p.telefono_contacto, p.correo_paciente, 
@@ -61,7 +61,7 @@ class Expediente {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // 5. Obtener todas las sesiones clínicas asociadas a este expediente
+    // Obtener todas las sesiones clínicas asociadas a este expediente
     public function obtenerSesionesPorExpediente($id_expediente) {
         $sql = "SELECT * FROM sesiones_clinicas 
                 WHERE id_expediente = :id_expediente 
@@ -72,7 +72,7 @@ class Expediente {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // 6. Guardar una nueva sesión clínica (Ahora con tipo_consulta)
+    // Guardar una nueva sesión clínica (Ahora con tipo_consulta)
     public function guardarSesion($id_expediente, $tipo_consulta, $observaciones, $intervencion, $notas, $id_cita = null) {
         $sql = "INSERT INTO sesiones_clinicas (id_cita, id_expediente, tipo_consulta, observaciones_generales, intervencion_realizada, notas_evolucion, fecha_registro) 
                 VALUES (:id_cita, :id_expediente, :tipo_consulta, :observaciones, :intervencion, :notas, NOW())";
@@ -80,7 +80,7 @@ class Expediente {
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':id_cita', !empty($id_cita) ? $id_cita : null, !empty($id_cita) ? PDO::PARAM_INT : PDO::PARAM_NULL);
         $stmt->bindValue(':id_expediente', $id_expediente);
-        $stmt->bindValue(':tipo_consulta', $tipo_consulta); // Vinculamos el nuevo campo
+        $stmt->bindValue(':tipo_consulta', $tipo_consulta); 
         $stmt->bindValue(':observaciones', $observaciones);
         $stmt->bindValue(':intervencion', $intervencion);
         $stmt->bindValue(':notas', $notas);
@@ -88,7 +88,7 @@ class Expediente {
         return $stmt->execute();
     }
 
-    // 7. Obtener los datos básicos de una cita (para saber qué paciente la agendó)
+    // Obtener los datos básicos de una cita (para saber qué paciente la agendó)
     public function obtenerCitaPorId($id_cita) {
         $sql = "SELECT * FROM citas WHERE id_cita = :id_cita LIMIT 1";
         $stmt = $this->db->prepare($sql);
@@ -97,9 +97,8 @@ class Expediente {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // 8. Actualizar el estado de la cita a 'Atendida'
+    // Actualizar el estado de la cita a 'Atendida'
     public function marcarCitaComoAtendida($id_cita) {
-        // CORREGIDO: estado_cita y 'Completada' para que coincida con tu base de datos
         $sql = "UPDATE citas SET estado_cita = 'Completada' WHERE id_cita = :id_cita";
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':id_cita', $id_cita, PDO::PARAM_INT);

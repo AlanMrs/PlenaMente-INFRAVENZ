@@ -23,7 +23,7 @@ class App {
         $claseControlador = "\\App\\Controllers\\" . $this->controladorActual;
         $this->controladorActual = new $claseControlador;
 
-        // 2. BUSCAR EL MÉTODO
+        // BUSCAR EL MÉTODO
         // Verificamos si la URL pide ejecutar una función específica (ej: /paciente/editar)
         if (isset($url[1])) {
             if (method_exists($this->controladorActual, $url[1])) {
@@ -32,11 +32,11 @@ class App {
             }
         }
 
-        // 3. OBTENER LOS PARÁMETROS
+        // OBTENER LOS PARÁMETROS
         // Si hay más cosas en la URL (ej: el ID del paciente /paciente/editar/5), los guardamos
         $this->parametros = $url ? array_values($url) : [];
 
-        // 4. EJECUTAR
+        // EJECUTAR
         // Llamamos al controlador y al método, pasándole los parámetros si existen
         call_user_func_array([$this->controladorActual, $this->metodoActual], $this->parametros);
     }

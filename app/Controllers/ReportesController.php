@@ -10,13 +10,13 @@ class ReportesController extends Controller {
             session_start();
         }
 
-        // 1. Validar si hay sesión
+        // Validar si hay sesión
         if (!isset($_SESSION['usuario_id'])) {
             header('Location: ' . BASE_URL . '/auth/login');
             exit;
         }
 
-        // 2. BLINDAJE: Solo Psicólogo (1) y Director (2) pueden entrar
+        // BLINDAJE: Solo Psicólogo (1) y Director (2) pueden entrar
         if (!isset($_SESSION['id_rol']) || !in_array($_SESSION['id_rol'], [1, 2])) {
             header('Location: ' . BASE_URL . '/dashboard');
             exit;
@@ -41,7 +41,7 @@ class ReportesController extends Controller {
         $paciente = $reporteModel->obtenerDatosPacientePorExpediente($id_expediente);
         $resumen_sesiones = $reporteModel->obtenerResumenSesiones($id_expediente);
         
-        // NUEVO: Obtenemos el texto de la última sesión para autollenar el informe
+        // Obtenemos el texto de la última sesión para autollenar el informe
         $ultima_sesion = $reporteModel->obtenerUltimaSesion($id_expediente);
 
         if (!$paciente) {

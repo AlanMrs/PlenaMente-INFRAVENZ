@@ -1,7 +1,7 @@
 <?php require_once __DIR__ . '/../layouts/header.php'; ?>
 
 <?php 
-// 🟢 LÓGICA DE ROLES Y CONTADORES
+// LÓGICA DE ROLES Y CONTADORES
 $id_rol = $_SESSION['id_rol'] ?? 0; 
 $total_presentes = 0; $total_ausentes = 0; $total_tardes = 0; $total_justificados = 0;
 

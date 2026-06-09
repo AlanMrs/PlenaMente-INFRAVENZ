@@ -12,13 +12,13 @@ class PacienteController extends Controller {
             session_start();
         }
 
-        // 1. Validar si el usuario NO ha iniciado sesión
+        // Validar si el usuario NO ha iniciado sesión
         if (!isset($_SESSION['usuario_id'])) {
             header('Location: ' . BASE_URL . '/auth/login');
             exit;
         }
 
-        // 2. Validar si el rol NO es el permitido (Blindaje RBAC)
+        // Validar si el rol NO es el permitido 
         if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
             // Si es un Director o Administrador intentando espiar, lo enviamos al dashboard
             header('Location: ' . BASE_URL . '/dashboard');

@@ -11,7 +11,7 @@ class Dashboard {
         $this->db = (new Database())->getConnection();
     }
 
-    // 1. Contar las citas del día actual
+    // Contar las citas del día actual
     public function obtenerCitasHoy() {
         // Usamos DATE(fecha_hora) para ignorar la hora y comparar solo el día
         $sql = "SELECT COUNT(*) as total FROM citas WHERE DATE(fecha_hora) = CURDATE()";
@@ -20,7 +20,7 @@ class Dashboard {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
-    // 2. Contar solo a los pacientes que son Estudiantes
+    // Contar solo a los pacientes que son Estudiantes
     public function obtenerEstudiantesActivos() {
         $sql = "SELECT COUNT(*) as total FROM pacientes WHERE tipo_paciente = 'Estudiante'";
         $stmt = $this->db->prepare($sql);
@@ -28,7 +28,7 @@ class Dashboard {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
-    // 3. Contar las sesiones registradas en el mes actual
+    // Contar las sesiones registradas en el mes actual
     public function obtenerConsultasMes() {
         $sql = "SELECT COUNT(*) as total FROM sesiones_clinicas WHERE MONTH(fecha_registro) = MONTH(CURDATE()) AND YEAR(fecha_registro) = YEAR(CURDATE())";
         $stmt = $this->db->prepare($sql);
@@ -36,7 +36,7 @@ class Dashboard {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
-    // 4. Obtener la lista de citas de hoy con sus datos vinculados
+    // Obtener la lista de citas de hoy con sus datos vinculados
     public function obtenerProximasCitas() {
         // Extraemos fecha_hora pero le ponemos el alias 'hora_cita' para que la vista lo reconozca
         $sql = "SELECT c.id_cita, c.fecha_hora as hora_cita, c.motivo_cita, c.estado_cita, p.nombres, p.apellidos, e.id_expediente

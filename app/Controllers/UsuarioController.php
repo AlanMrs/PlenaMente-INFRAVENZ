@@ -87,7 +87,7 @@ class UsuarioController extends Controller {
             $nombre = trim($_POST['nombre_completo']);
             $correo = trim($_POST['correo']);
             $id_rol = $_POST['id_rol'];
-            $estado = $_POST['estado']; // Agregamos el estado (Activo/Inactivo)
+            $estado = $_POST['estado']; 
             $password = $_POST['password'];
 
             $password_hash = null;

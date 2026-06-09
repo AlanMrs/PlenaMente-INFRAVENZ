@@ -18,16 +18,16 @@ class DashboardController extends Controller {
     }
     
     public function index() {
-        // 1. Instanciamos el nuevo modelo de Dashboard
+        // Instanciamos el nuevo modelo de Dashboard
         $dashboardModel = $this->modelo('Dashboard');
 
-        // 2. Extraemos las estadísticas
+        // Extraemos las estadísticas
         $citasHoy = $dashboardModel->obtenerCitasHoy();
         $estudiantesActivos = $dashboardModel->obtenerEstudiantesActivos();
         $consultasMes = $dashboardModel->obtenerConsultasMes();
         $proximasCitas = $dashboardModel->obtenerProximasCitas();
 
-        // 3. Enviamos todas las variables a la vista
+        // Enviamos todas las variables a la vista
         $this->vista('dashboard/index', [
             'citas_hoy' => $citasHoy,
             'estudiantes_activos' => $estudiantesActivos,
