@@ -35,4 +35,4 @@ plenamente/
 │   ├── Models/         # Interacción con MariaDB
 │   └── Views/          # Interfaces gráficas y plantillas
 ├── public/             # Raíz web (CSS, JS, Imágenes y Front Controller index.php)
-└── bd_plenamente.sql   # Script de la base de datos
+└── plenamente_bd.sql   # Script de la base de datos

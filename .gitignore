@@ -29,7 +29,7 @@
 *.sql
 *.sqlite
 # ...EXCEPTO el script oficial de instalación que se menciona en el README
-!bd_plenamente.sql
+!plenamente_bd.sql
 
 # ==========================================
 # Archivos del Sistema Operativo
