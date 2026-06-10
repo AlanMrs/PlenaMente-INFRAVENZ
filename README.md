@@ -5,7 +5,7 @@
 ---
 
 ## 📖 Descripción del Proyecto
-**PlenaMente** es una aplicación web diseñada para centralizar, estructurar y automatizar la gestión clínica y administrativa del departamento de psicología de INFRAVENZ. 
+**PlenaMente-INFRAVENZ** es una aplicación web diseñada para centralizar, estructurar y automatizar la gestión clínica y administrativa del departamento de psicología de INFRAVENZ. 
 
 El sistema mitiga la carga operativa crítica que representa manejar físicamente los expedientes de más de 700 usuarios, eliminando el riesgo de pérdida de información sensible, optimizando el agendamiento de citas mediante alertas, y permitiendo a la administración generar reportes técnicos de forma inmediata para la atención oportuna de casos críticos.
 
@@ -29,10 +29,38 @@ El sistema está construido bajo el paradigma de **Programación Orientada a Obj
 ## 📂 Estructura del Proyecto (MVC)
 ```text
 plenamente/
-├── app/                # Lógica del MVC
-│   ├── Config/         # Configuración y conexión PDO a BD
-│   ├── Controllers/    # Controladores de la aplicación
-│   ├── Models/         # Interacción con MariaDB
-│   └── Views/          # Interfaces gráficas y plantillas
-├── public/             # Raíz web (CSS, JS, Imágenes y Front Controller index.php)
-└── plenamente_bd.sql   # Script de la base de datos
+├── app/                    # Lógica central del patrón MVC
+│   ├── Config/             # Configuración del sistema y conexión segura (PDO) a la base de datos
+│   ├── Core/               # Núcleo del mini-framework (Enrutador principal y clase Controller base)
+│   ├── Controllers/        # Controladores (Manejan el flujo de la app y la seguridad por roles - RBAC)
+│   │   ├── AsistenciaController.php
+│   │   ├── AuthController.php
+│   │   ├── DashboardController.php
+│   │   ├── ReportesController.php
+│   │   └── ...
+│   ├── Models/             # Modelos (Consultas preparadas de MariaDB para evitar inyección SQL)
+│   │   ├── Asistencia.php
+│   │   ├── Dashboard.php
+│   │   ├── Reporte.php
+│   │   ├── Usuario.php
+│   │   └── ...
+│   └── Views/              # Interfaces gráficas (HTML nativo integrado con PHP)
+│       ├── asistencia/     # Módulo de bitácora de asistencias y verificación
+│       ├── auth/           # Pantallas de autenticación y login
+│       ├── dashboard/      # Panel de control principal con métricas (KPIs) dinámicas
+│       ├── layouts/        # Componentes reutilizables (header.php, sidebar, footer.php)
+│       ├── reportes/       # Generación de informes técnicos optimizados para impresión
+│       └── ...
+├── public/                 # Directorio público (Raíz segura expuesta al servidor web)
+│   ├── css/                # Hojas de estilo puras utilizando variables CSS nativas
+│   ├── img/                # Logotipos y recursos gráficos institucionales
+│   ├── js/                 # Scripts interactivos del lado del cliente
+│   └── index.php           # Front Controller (Punto único de entrada de toda la aplicación)
+└── plenamente_bd.sql       # Script de creación y estructura de la base de datos (MariaDB)
+
+## 🛠️ Standares de codificacion
+
+* **PascalCase** para Clases y Archivos base (ej. AsistenciaController, Dashboard.php).
+* **camelCase** para Métodos y Funciones (ej. obtenerAsistenciasPorFecha(), registrarAsistencia()).
+* **snake_case** para Variables, Arrays y columnas de Base de Datos (ej. id_expediente, fecha_registro).
+
