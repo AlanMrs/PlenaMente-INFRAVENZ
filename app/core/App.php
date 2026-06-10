@@ -10,7 +10,7 @@ class App {
     public function __construct() {
         $url = $this->parseUrl();
 
-        // 1. BUSCAR EL CONTROLADOR
+        // BUSCAR EL CONTROLADOR
         // Verificamos si existe el archivo del controlador en la carpeta Controllers
         if (isset($url[0]) && file_exists('../app/Controllers/' . ucwords($url[0]) . 'Controller.php')) {
             $this->controladorActual = ucwords($url[0]) . 'Controller';

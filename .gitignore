@@ -3,7 +3,7 @@
 # ==========================================
 # Ignorar el archivo real de conexión a BD para no filtrar contraseñas
 /app/Config/Database.php
-# Ignorar archivos de variables de entorno (si llegas a usarlos)
+# Ignorar archivos de variables de entorno (si llegamos a usarlos)
 .env
 .env.*
 !.env.example
@@ -28,7 +28,7 @@
 # Ignorar cualquier volcado de BD por accidente...
 *.sql
 *.sqlite
-# ...EXCEPTO el script oficial de instalación que mencionaste en el README
+# ...EXCEPTO el script oficial de instalación que se menciona en el README
 !bd_plenamente.sql
 
 # ==========================================
