@@ -2,33 +2,28 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Flash;
+use App\Core\Logger;
 
 class AsistenciaController extends Controller {
 
     public function __construct() {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
+        parent::__construct();
 
         if (!isset($_SESSION['usuario_id'])) {
-            header('Location: ' . BASE_URL . '/auth/login');
-            exit;
+            $this->redirect(BASE_URL . '/auth/login');
         }
 
-        // Permitimos entrar a Psicólogo (1) y Director (2)
         if (!isset($_SESSION['id_rol']) || !in_array($_SESSION['id_rol'], [1, 2])) {
-            header('Location: ' . BASE_URL . '/dashboard');
-            exit;
+            $this->redirect(BASE_URL . '/dashboard');
         }
     }
 
     public function index() {
-        // Obtenemos la fecha seleccionada (por defecto hoy)
-        $fecha = isset($_GET['fecha']) ? $_GET['fecha'] : date('Y-m-d');
+        $fecha = $_GET['fecha'] ?? date('Y-m-d');
         
         $asistenciaModel = $this->modelo('Asistencia');
         
-        // Obtenemos los datos para la vista
         $asistencias = $asistenciaModel->obtenerAsistenciasPorFecha($fecha);
         $expedientes = $asistenciaModel->obtenerExpedientesDisponibles();
 
@@ -40,28 +35,35 @@ class AsistenciaController extends Controller {
     }
 
     public function guardar() {
-        // Solo el Psicólogo puede guardar
         if ($_SESSION['id_rol'] != 1) {
-            header('Location: ' . BASE_URL . '/asistencia');
-            exit;
+            Flash::error('Solo el psicólogo puede registrar asistencias.');
+            $this->redirect(BASE_URL . '/asistencia');
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $fecha = $_POST['fecha_asistencia'];
-            $id_expediente = $_POST['id_expediente'];
-            $estado = $_POST['estado'];
-            $observaciones = $_POST['observaciones'];
+            $fecha = $_POST['fecha_asistencia'] ?? '';
+            $id_expediente = (int)($_POST['id_expediente'] ?? 0);
+            $estado = $_POST['estado'] ?? '';
+            $observaciones = trim($_POST['observaciones'] ?? '');
+
+            if (!$fecha || !$id_expediente || !$estado) {
+                Flash::error('Fecha, paciente y estado son obligatorios.');
+                $this->redirect(BASE_URL . "/asistencia?fecha={$fecha}");
+            }
 
             $asistenciaModel = $this->modelo('Asistencia');
             
-            // Registramos a este paciente individual
-            if(!empty($id_expediente) && !empty($estado)) {
-                $asistenciaModel->registrarAsistencia($id_expediente, $fecha, $estado, $observaciones);
+            $exito = $asistenciaModel->registrarAsistencia($id_expediente, $fecha, $estado, $observaciones);
+
+            if ($exito) {
+                Logger::info('Asistencia registrada', ['id_expediente' => $id_expediente, 'fecha' => $fecha, 'estado' => $estado]);
+                Flash::success('Asistencia registrada correctamente.');
+            } else {
+                Logger::error('Error al registrar asistencia', ['id_expediente' => $id_expediente, 'fecha' => $fecha]);
+                Flash::error('Error al registrar la asistencia.');
             }
 
-            // Redirigimos a la misma fecha
-            header('Location: ' . BASE_URL . '/asistencia?fecha=' . $fecha . '&success=1');
-            exit;
+            $this->redirect(BASE_URL . "/asistencia?fecha={$fecha}");
         }
     }
 }

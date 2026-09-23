@@ -2,22 +2,20 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Flash;
+use App\Core\Logger;
 
 class ExpedienteController extends Controller {
 
     public function __construct() {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-
+        parent::__construct();
+        
         if (!isset($_SESSION['usuario_id'])) {
-            header('Location: ' . BASE_URL . '/auth/login');
-            exit;
+            $this->redirect(BASE_URL . '/auth/login');
         }
 
         if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
-            header('Location: ' . BASE_URL . '/dashboard');
-            exit;
+            $this->redirect(BASE_URL . '/dashboard');
         }
     }
 
@@ -38,13 +36,17 @@ class ExpedienteController extends Controller {
 
         // Validamos si ya existe un expediente para este paciente
         if ($expedienteModel->verificarSiExiste($id_paciente)) {
-            // Si ya existe, lo redirigimos al listado con un mensaje de aviso
-            header('Location: ' . BASE_URL . '/expediente?error=ya_existe');
-            exit;
+            Flash::warning('Este paciente ya tiene un expediente abierto.');
+            $this->redirect(BASE_URL . '/expediente');
         }
 
         // Buscamos los datos básicos del paciente para mostrarlos en el formulario
         $paciente = $pacienteModel->obtenerPorId($id_paciente);
+
+        if (!$paciente) {
+            Flash::error('Paciente no encontrado.');
+            $this->redirect(BASE_URL . '/paciente');
+        }
 
         $this->vista('expedientes/crear', [
             'paciente' => $paciente
@@ -54,40 +56,43 @@ class ExpedienteController extends Controller {
     // Procesar la inserción de los datos en la base de datos
     public function guardar() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $id_paciente = $_POST['id_paciente'];
-            $fecha_apertura = $_POST['fecha_apertura'];
+            $id_paciente = (int)($_POST['id_paciente'] ?? 0);
+            $fecha_apertura = $_POST['fecha_apertura'] ?? '';
             $antecedentes_familiares = !empty($_POST['antecedentes_familiares']) ? trim($_POST['antecedentes_familiares']) : null;
             $antecedentes_medicos = !empty($_POST['antecedentes_medicos']) ? trim($_POST['antecedentes_medicos']) : null;
+
+            if (!$id_paciente || !$fecha_apertura) {
+                Flash::error('Paciente y fecha de apertura son obligatorios.');
+                $this->redirect(BASE_URL . '/expediente/crear/' . $id_paciente);
+            }
 
             $expedienteModel = $this->modelo('Expediente');
             $exito = $expedienteModel->crearExpediente($id_paciente, $fecha_apertura, $antecedentes_familiares, $antecedentes_medicos);
 
             if ($exito) {
-                header('Location: ' . BASE_URL . '/expediente?success=creado');
-                exit;
+                Logger::info('Expediente creado', ['id_paciente' => $id_paciente]);
+                Flash::success('Expediente abierto correctamente.');
+                $this->redirect(BASE_URL . '/expediente');
             } else {
-                echo "Hubo un error al intentar abrir el expediente.";
+                Logger::error('Error al crear expediente', ['id_paciente' => $id_paciente]);
+                Flash::error('Hubo un error al intentar abrir el expediente.');
+                $this->redirect(BASE_URL . '/expediente/crear/' . $id_paciente);
             }
         }
     }
 
     public function ver($id) {
-        // Inicializamos el modelo directamente usando el método nativo de tu framework
         $modeloExpediente = $this->modelo('Expediente');
         
-        // Buscamos el expediente con los datos del paciente
         $expediente = $modeloExpediente->obtenerPorId($id);
         
-        // Si el expediente no existe, redirigimos al listado de pacientes con un aviso
         if (!$expediente) {
-            header("Location: " . BASE_URL . "/paciente?error=no_encontrado");
-            exit();
+            Flash::error('Expediente no encontrado.');
+            $this->redirect(BASE_URL . '/paciente');
         }
         
-        // Buscamos todas las sesiones clínicas de este expediente
         $sesiones = $modeloExpediente->obtenerSesionesPorExpediente($id);
         
-        // Cargamos la vista enviando ambos flujos de datos de forma directa
         $this->vista('expedientes/ver', [
             'expediente' => $expediente,
             'sesiones'   => $sesiones
@@ -98,25 +103,20 @@ class ExpedienteController extends Controller {
     public function atender_cita($id_cita) {
         $modeloExpediente = $this->modelo('Expediente');
         
-        // Buscamos la cita para saber quién es el paciente
         $cita = $modeloExpediente->obtenerCitaPorId($id_cita);
         if (!$cita) {
-            header("Location: " . BASE_URL . "/cita?error=cita_no_existe");
-            exit();
+            Flash::error('Cita no encontrada.');
+            $this->redirect(BASE_URL . '/cita');
         }
 
-        // Verificamos si ese paciente ya tiene un expediente abierto
         $expediente = $modeloExpediente->verificarSiExiste($cita['id_paciente']);
         
         if (!$expediente) {
-            // Si no tiene expediente, lo mandamos al listado de pacientes con una advertencia
-            header("Location: " . BASE_URL . "/paciente?error=deye_abrir_expediente_primero");
-            exit();
+            Flash::warning('El paciente no tiene expediente abierto. Debe crearlo primero.');
+            $this->redirect(BASE_URL . '/paciente');
         }
 
-        // Si ya tiene expediente, lo mandamos directo a registrar la sesión pasando el id_cita por la URL
-        header("Location: " . BASE_URL . "/expediente/nueva_sesion/" . $expediente['id_expediente'] . "?id_cita=" . $id_cita);
-        exit();
+        $this->redirect(BASE_URL . "/expediente/nueva_sesion/{$expediente['id_expediente']}?id_cita={$id_cita}");
     }
 
     // Mostrar formulario de nueva sesión
@@ -124,7 +124,11 @@ class ExpedienteController extends Controller {
         $modeloExpediente = $this->modelo('Expediente');
         $expediente = $modeloExpediente->obtenerPorId($id_expediente);
         
-        // Capturamos si viene un id_cita por la URL, si no, queda como null
+        if (!$expediente) {
+            Flash::error('Expediente no encontrado.');
+            $this->redirect(BASE_URL . '/expediente');
+        }
+        
         $id_cita = $_GET['id_cita'] ?? null;
 
         $this->vista('expedientes/nueva_sesion', [
@@ -136,29 +140,35 @@ class ExpedienteController extends Controller {
     // Procesar el guardado de la sesión
     public function guardar_sesion() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $id_expediente = $_POST['id_expediente'];
+            $id_expediente = (int)($_POST['id_expediente'] ?? 0);
             
-            // BLINDAJE: Si id_cita viene vacío de la vista, lo convertimos en un NULL real de PHP
-            $id_cita = (!empty($_POST['id_cita'])) ? $_POST['id_cita'] : null;
+            $id_cita = (!empty($_POST['id_cita'])) ? (int)$_POST['id_cita'] : null;
             
-            $tipo_consulta = $_POST['tipo_consulta']; 
-            $observaciones = trim($_POST['observaciones_generales']);
-            $intervencion  = trim($_POST['intervencion_realizada']);
-            $notas         = trim($_POST['notas_evolucion']);
+            $tipo_consulta = trim($_POST['tipo_consulta'] ?? '');
+            $observaciones = trim($_POST['observaciones_generales'] ?? '');
+            $intervencion  = trim($_POST['intervencion_realizada'] ?? '');
+            $notas         = trim($_POST['notas_evolucion'] ?? '');
+
+            if (!$id_expediente || !$tipo_consulta || !$observaciones || !$intervencion || !$notas) {
+                Flash::error('Todos los campos son obligatorios.');
+                $this->redirect(BASE_URL . "/expediente/nueva_sesion/{$id_expediente}" . ($id_cita ? "?id_cita={$id_cita}" : ''));
+            }
 
             $modeloExpediente = $this->modelo('Expediente');
             
-            // Enviamos las variables limpias al modelo
             $exito = $modeloExpediente->guardarSesion($id_expediente, $tipo_consulta, $observaciones, $intervencion, $notas, $id_cita);
 
             if ($exito) {
-                if (!empty($id_cita)) {
+                if ($id_cita) {
                     $modeloExpediente->marcarCitaComoAtendida($id_cita);
                 }
-                header('Location: ' . BASE_URL . '/expediente/ver/' . $id_expediente . '?success=sesion_guardada');
-                exit();
+                Logger::info('Sesión clínica guardada', ['id_expediente' => $id_expediente, 'id_cita' => $id_cita]);
+                Flash::success('Sesión clínica registrada correctamente.');
+                $this->redirect(BASE_URL . '/expediente/ver/' . $id_expediente);
             } else {
-                echo "Error al guardar la sesión clínica.";
+                Logger::error('Error al guardar sesión clínica', ['id_expediente' => $id_expediente]);
+                Flash::error('Error al guardar la sesión clínica.');
+                $this->redirect(BASE_URL . "/expediente/nueva_sesion/{$id_expediente}" . ($id_cita ? "?id_cita={$id_cita}" : ''));
             }
         }
     }

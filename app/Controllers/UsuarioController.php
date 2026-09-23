@@ -2,25 +2,21 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Flash;
+use App\Core\Logger;
 
 class UsuarioController extends Controller {
-
     
     public function __construct() {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
+        parent::__construct();
         
-        // Si no hay sesión o el rol NO es Administrador, lo enviamos al dashboard
         if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 3) {
-            header('Location: ' . BASE_URL . '/dashboard');
-            exit();
+            $this->redirect(BASE_URL . '/dashboard');
         }
     }
     
     // Método principal que lista los usuarios
     public function index() {
-        
         $usuarioModel = $this->modelo('Usuario');
         
         $usuarios = $usuarioModel->obtenerTodos();
@@ -38,25 +34,39 @@ class UsuarioController extends Controller {
     // Recibe los datos del formulario, encripta y guarda
     public function guardar() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // 1. Recibimos los datos limpios
-            $nombre = trim($_POST['nombre_completo']);
-            $correo = trim($_POST['correo']);
-            $password = $_POST['password'];
-            $id_rol = $_POST['id_rol'];
+            $nombre = trim($_POST['nombre_completo'] ?? '');
+            $correo = trim($_POST['correo'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $id_rol = (int)($_POST['id_rol'] ?? 0);
 
-            
+            if (!$nombre || !$correo || !$password || !$id_rol) {
+                Flash::error('Todos los campos son obligatorios.');
+                $this->redirect(BASE_URL . '/usuario/crear');
+            }
+
+            if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                Flash::error('El correo no tiene un formato válido.');
+                $this->redirect(BASE_URL . '/usuario/crear');
+            }
+
+            if (strlen($password) < 8) {
+                Flash::error('La contraseña debe tener al menos 8 caracteres.');
+                $this->redirect(BASE_URL . '/usuario/crear');
+            }
+
             $password_hash = password_hash($password, PASSWORD_DEFAULT);
-
             
             $usuarioModel = $this->modelo('Usuario');
             $exito = $usuarioModel->crearUsuario($id_rol, $nombre, $correo, $password_hash);
 
             if ($exito) {
-                
-                header('Location: ' . BASE_URL . '/usuario');
-                exit;
+                Logger::info('Usuario creado', ['correo' => $correo, 'id_rol' => $id_rol]);
+                Flash::success('Usuario registrado correctamente.');
+                $this->redirect(BASE_URL . '/usuario');
             } else {
-                echo "Hubo un error al guardar el usuario en la base de datos.";
+                Logger::error('Error al crear usuario', ['correo' => $correo]);
+                Flash::error('Hubo un error al guardar el usuario (posible correo duplicado).');
+                $this->redirect(BASE_URL . '/usuario/crear');
             }
         }
     }
@@ -64,60 +74,72 @@ class UsuarioController extends Controller {
     // Muestra el formulario con los datos actuales
     public function editar($id = null) {
         if (!$id) {
-            header('Location: ' . BASE_URL . '/usuario');
-            exit;
+            $this->redirect(BASE_URL . '/usuario');
         }
 
         $usuarioModel = $this->modelo('Usuario');
         $usuario = $usuarioModel->obtenerPorId($id);
 
-        // Si el usuario no existe, lo regresamos
         if (!$usuario) {
-            header('Location: ' . BASE_URL . '/usuario');
-            exit;
+            Flash::error('Usuario no encontrado.');
+            $this->redirect(BASE_URL . '/usuario');
         }
 
-        // Le enviamos los datos a la vista
         $this->vista('usuarios/editar', ['usuario' => $usuario]);
     }
 
     // Procesa los cambios
     public function actualizar($id) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $nombre = trim($_POST['nombre_completo']);
-            $correo = trim($_POST['correo']);
-            $id_rol = $_POST['id_rol'];
-            $estado = $_POST['estado']; 
-            $password = $_POST['password'];
+            $nombre = trim($_POST['nombre_completo'] ?? '');
+            $correo = trim($_POST['correo'] ?? '');
+            $id_rol = (int)($_POST['id_rol'] ?? 0);
+            $estado = $_POST['estado'] ?? 'Activo';
+            $password = $_POST['password'] ?? '';
+
+            if (!$nombre || !$correo || !$id_rol) {
+                Flash::error('Todos los campos obligatorios deben ser completados.');
+                $this->redirect(BASE_URL . '/usuario/editar/' . $id);
+            }
+
+            if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                Flash::error('El correo no tiene un formato válido.');
+                $this->redirect(BASE_URL . '/usuario/editar/' . $id);
+            }
 
             $password_hash = null;
-            // Solo encriptamos si el usuario escribió algo en el campo de contraseña
             if (!empty($password)) {
+                if (strlen($password) < 8) {
+                    Flash::error('La contraseña debe tener al menos 8 caracteres.');
+                    $this->redirect(BASE_URL . '/usuario/editar/' . $id);
+                }
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
             }
 
             $usuarioModel = $this->modelo('Usuario');
             $usuarioModel->actualizarUsuario($id, $id_rol, $nombre, $correo, $estado, $password_hash);
 
-            // Redirigimos a la lista
-            header('Location: ' . BASE_URL . '/usuario');
-            exit;
+            Logger::info('Usuario actualizado', ['id_usuario' => $id]);
+            Flash::success('Usuario actualizado correctamente.');
+            $this->redirect(BASE_URL . '/usuario');
         }
     }
 
     // Procesa la eliminación lógica
     public function eliminar($id = null) {
-        // Verificamos que nos envíen un ID
         if ($id) {
-            // REGLA DE SEGURIDAD: Evitar que el usuario activo se desactive a sí mismo
-            if ($id != $_SESSION['usuario_id']) {
-                $usuarioModel = $this->modelo('Usuario');
-                $usuarioModel->eliminarLogico($id);
+            if ((int)$id === (int)$_SESSION['usuario_id']) {
+                Flash::error('No puede desactivar su propia cuenta.');
+                $this->redirect(BASE_URL . '/usuario');
             }
+            
+            $usuarioModel = $this->modelo('Usuario');
+            $usuarioModel->eliminarLogico($id);
+            
+            Logger::info('Usuario desactivado', ['id_usuario' => $id, 'por' => $_SESSION['usuario_id']]);
+            Flash::success('Usuario desactivado correctamente.');
         }
 
-        // Ya sea que se eliminó o intentó eliminarse a sí mismo, lo regresamos a la tabla
-        header('Location: ' . BASE_URL . '/usuario');
-        exit;
+        $this->redirect(BASE_URL . '/usuario');
     }
 }

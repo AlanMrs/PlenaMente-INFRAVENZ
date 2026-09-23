@@ -8,7 +8,7 @@
 </head>
 <body>
     <header class="header">
-        <h1>🧠 Sistema Psicológico INFRAVENZ</h1>
+        <h1>🧠 Aplicación Psicológica INFRAVENZ</h1>
         <div>Usuario: <?php echo $_SESSION['usuario_nombre'] ?? 'Invitado'; ?></div>
     </header>
 

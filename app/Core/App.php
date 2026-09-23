@@ -12,13 +12,13 @@ class App {
 
         // BUSCAR EL CONTROLADOR
         // Verificamos si existe el archivo del controlador en la carpeta Controllers
-        if (isset($url[0]) && file_exists('../app/Controllers/' . ucwords($url[0]) . 'Controller.php')) {
+        if (isset($url[0]) && file_exists(__DIR__ . '/../Controllers/' . ucwords($url[0]) . 'Controller.php')) {
             $this->controladorActual = ucwords($url[0]) . 'Controller';
             unset($url[0]);
         }
 
         // Requerimos el controlador y lo instanciamos
-        require_once '../app/Controllers/' . $this->controladorActual . '.php';
+        require_once __DIR__ . '/../Controllers/' . $this->controladorActual . '.php';
         // Agregamos el namespace dinámicamente
         $claseControlador = "\\App\\Controllers\\" . $this->controladorActual;
         $this->controladorActual = new $claseControlador;

@@ -2,24 +2,20 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Flash;
+use App\Core\Logger;
 
 class ReportesController extends Controller {
 
     public function __construct() {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
+        parent::__construct();
 
-        // Validar si hay sesión
         if (!isset($_SESSION['usuario_id'])) {
-            header('Location: ' . BASE_URL . '/auth/login');
-            exit;
+            $this->redirect(BASE_URL . '/auth/login');
         }
 
-        // BLINDAJE: Solo Psicólogo (1) y Director (2) pueden entrar
         if (!isset($_SESSION['id_rol']) || !in_array($_SESSION['id_rol'], [1, 2])) {
-            header('Location: ' . BASE_URL . '/dashboard');
-            exit;
+            $this->redirect(BASE_URL . '/dashboard');
         }
     }
 
@@ -37,22 +33,22 @@ class ReportesController extends Controller {
     public function tecnico($id_expediente) {
         $reporteModel = $this->modelo('Reporte');
         
-        // Obtenemos los datos del paciente y un resumen de sus sesiones
         $paciente = $reporteModel->obtenerDatosPacientePorExpediente($id_expediente);
         $resumen_sesiones = $reporteModel->obtenerResumenSesiones($id_expediente);
         
-        // Obtenemos el texto de la última sesión para autollenar el informe
         $ultima_sesion = $reporteModel->obtenerUltimaSesion($id_expediente);
 
         if (!$paciente) {
-            header('Location: ' . BASE_URL . '/reportes');
-            exit;
+            Flash::error('Expediente no encontrado.');
+            $this->redirect(BASE_URL . '/reportes');
         }
+
+        Logger::info('Reporte técnico generado', ['id_expediente' => $id_expediente, 'usuario' => $_SESSION['usuario_id']]);
 
         $this->vista('reportes/tecnico', [
             'paciente' => $paciente,
             'resumen' => $resumen_sesiones,
-            'ultima_sesion' => $ultima_sesion // Pasamos la variable a la vista
+            'ultima_sesion' => $ultima_sesion
         ]);
     }
 }

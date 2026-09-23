@@ -169,7 +169,7 @@ CREATE TABLE `sesiones_clinicas` (
   `observaciones_generales` text NOT NULL,
   `intervencion_realizada` text NOT NULL,
   `notas_evolucion` text NOT NULL,
-  `fecha_registro` date NOT NULL
+  `fecha_registro` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -177,11 +177,11 @@ CREATE TABLE `sesiones_clinicas` (
 --
 
 INSERT INTO `sesiones_clinicas` (`id_sesion`, `id_cita`, `id_expediente`, `tipo_consulta`, `observaciones_generales`, `intervencion_realizada`, `notas_evolucion`, `fecha_registro`) VALUES
-(2, NULL, 1, 'Seguimiento', 'sadjkshjksdhjdk shdfkjdsfhjdsfh sfhsjdkfhksjdfh', 'dsfsdfdsfsf fdgfgfdga fgdfg', 'HGHJghj mzsjhsadgjhsadhj kljsaskljdkj', '2026-05-31'),
-(3, NULL, 1, 'Seguimiento', 'dfdfasdffssdf', 'dsfsdfdsfsdfsdf', 'asdfdssfsdfdsfdf', '2026-06-03'),
-(4, 1, 1, 'Seguimiento', 'asfsfsdsfsdf', 'safsafasfasf', 'asfasfsafasfasff', '2026-06-03'),
-(6, 2, 1, 'Seguimiento', 'fdsafdfsdsdfsadf', 'dsfgagdfgfg', 'agdfgdfgdfagfg', '2026-06-03'),
-(7, NULL, 1, 'Intervención en Crisis', 'fasdagdfgadfg', 'adfgdfgfgafdgf', 'adfagdfagafdgaf', '2026-06-03');
+(2, NULL, 1, 'Seguimiento', 'sadjkshjksdhjdk shdfkjdsfhjdsfh sfhsjdkfhksjdfh', 'dsfsdfdsfsf fdgfgfdga fgdfg', 'HGHJghj mzsjhsadgjhsadhj kljsaskljdkj', '2026-05-31 10:30:00'),
+(3, NULL, 1, 'Seguimiento', 'dfdfasdffssdf', 'dsfsdfdsfsdfsdf', 'asdfdssfsdfdsfdf', '2026-06-03 09:15:00'),
+(4, 1, 1, 'Seguimiento', 'asfsfsdsfsdf', 'safsafasfasf', 'asfasfsafasfasff', '2026-06-03 14:20:00'),
+(6, 2, 1, 'Seguimiento', 'fdsafdfsdsdfsadf', 'dsfgagdfgfg', 'agdfgdfgdfagfg', '2026-06-03 16:45:00'),
+(7, NULL, 1, 'Intervención en Crisis', 'fasdagdfgadfg', 'adfgdfgfgafdgf', 'adfagdfagafdgaf', '2026-06-03 11:00:00');
 
 -- --------------------------------------------------------
 

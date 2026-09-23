@@ -1,0 +1,24 @@
+# =====================================================
+# HTACCESS EXTERNO - Solo se usa en Hostinger cuando
+# todo el proyecto vive dentro de public_html y el
+# document root NO apunta directamente a /public
+# Local XAMPP: permite URLs limpias sin /public
+# =====================================================
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# 1. Bloquear acceso directo a carpetas sensibles
+RewriteRule ^(app|logs|vendor|tmp|cache)(/.*)?$ - [F,L]
+
+# 2. Bloquear archivos sensibles (volcados SQL, env, logs)
+RewriteRule \.(sql|env|log|ini)$ - [F,L]
+
+# 3. Si ya apunta a /public, no reescribir (evita loop)
+RewriteCond %{REQUEST_URI} !^.*/public(/.*)?$
+
+# 4. Todo lo demás va hacia /public (el verdadero docroot)
+RewriteRule ^(.*)$ public/$1 [L,QSA]
+</IfModule>
+
+# Negar listado de directorios en la raíz del proyecto
+DirectoryIndex index.php

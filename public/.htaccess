@@ -1,4 +1,4 @@
-Options -MultiViews
+<IfModule mod_rewrite.c>
 RewriteEngine On
 
 # Si la ruta no es una carpeta real que exista
@@ -8,3 +8,7 @@ RewriteCond %{REQUEST_FILENAME} !-f
 
 # Redirige todo al index.php
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+</IfModule>
+
+# Protege contra listado de directorios (en vez de Options, que Hostinger bloquea)
+DirectoryIndex index.php

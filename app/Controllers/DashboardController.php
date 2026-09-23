@@ -2,32 +2,28 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Logger;
 
 class DashboardController extends Controller {
 
     public function __construct() {
-        // Aseguramos que la sesión esté activa
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-
+        parent::__construct();
+        
         if (!isset($_SESSION['usuario_id'])) {
-            header('Location: ' . BASE_URL . '/auth/login');
-            exit;
+            $this->redirect(BASE_URL . '/auth/login');
         }
     }
     
     public function index() {
-        // Instanciamos el nuevo modelo de Dashboard
         $dashboardModel = $this->modelo('Dashboard');
 
-        // Extraemos las estadísticas
         $citasHoy = $dashboardModel->obtenerCitasHoy();
         $estudiantesActivos = $dashboardModel->obtenerEstudiantesActivos();
         $consultasMes = $dashboardModel->obtenerConsultasMes();
         $proximasCitas = $dashboardModel->obtenerProximasCitas();
 
-        // Enviamos todas las variables a la vista
+        Logger::debug('Dashboard accessed', ['usuario_id' => $_SESSION['usuario_id']]);
+
         $this->vista('dashboard/index', [
             'citas_hoy' => $citasHoy,
             'estudiantes_activos' => $estudiantesActivos,

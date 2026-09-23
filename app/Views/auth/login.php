@@ -18,7 +18,7 @@
             </div>
         <?php endif; ?>
 
-        <form action="/plenamente-infravenz/public/auth/procesar" method="POST">
+        <form action="<?php echo BASE_URL; ?>/auth/procesar" method="POST">
             <div class="form-group">
                 <label for="correo">Correo Electrónico</label>
                 <input type="email" id="correo" name="correo" class="form-control" required placeholder="admin@infravenz.edu.sv">
