@@ -5,9 +5,11 @@
         Expediente Clínico: EXP-<?php echo str_pad($expediente['id_expediente'], 5, "0", STR_PAD_LEFT); ?>
     </h2>
     <div style="display: flex; gap: 8px; align-items: center;">
-        <a href="<?php echo BASE_URL; ?>/reportes/tecnico/<?php echo $expediente['id_expediente']; ?>" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; text-decoration: none; color: white; padding: 8px 14px;">
-            📄 Generar Informe
-        </a>
+        <?php if (isset($_SESSION['id_rol']) && $_SESSION['id_rol'] == 1): ?>
+            <a href="<?php echo BASE_URL; ?>/reportes/tecnico/<?php echo $expediente['id_expediente']; ?>" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; text-decoration: none; color: white; padding: 8px 14px;">
+                📄 Generar Informe
+            </a>
+        <?php endif; ?>
         <a href="<?php echo BASE_URL; ?>/paciente" class="btn btn-secondary">Volver a Pacientes</a>
     </div>
 </div>

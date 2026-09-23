@@ -37,8 +37,19 @@ class ReportesController extends Controller {
         ]);
     }
 
+    // Solo el Psicólogo (rol 1) puede crear, generar o guardar informes.
+    // El Director (rol 2) solo consulta: index() y ver().
+    protected function soloPsicologo(): void {
+        if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
+            Flash::error('Solo el psicólogo puede crear informes.');
+            $this->redirect(BASE_URL . '/reportes');
+        }
+    }
+
     // Muestra la lista de expedientes para elegir de quién generar un informe
     public function nuevo() {
+        $this->soloPsicologo();
+
         $reporteModel = $this->modelo('Reporte');
         $expedientes = $reporteModel->obtenerExpedientesParaReporte();
 
@@ -49,6 +60,8 @@ class ReportesController extends Controller {
 
     // Genera el Informe Técnico de un paciente en específico (sin guardar aún)
     public function tecnico($id_expediente) {
+        $this->soloPsicologo();
+
         $reporteModel = $this->modelo('Reporte');
         
         $paciente = $reporteModel->obtenerDatosPacientePorExpediente($id_expediente);
@@ -72,6 +85,8 @@ class ReportesController extends Controller {
 
     // Guarda el informe técnico generado en la tabla reportes
     public function guardar() {
+        $this->soloPsicologo();
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect(BASE_URL . '/reportes');
         }

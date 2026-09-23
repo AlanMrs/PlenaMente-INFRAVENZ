@@ -3,11 +3,17 @@
 <h2 style="color: var(--violeta-principal); margin-bottom: 24px;">
     📄 Informes Técnicos Psicológicos
 </h2>
+<?php
+    $id_rol = $_SESSION['id_rol'] ?? 0;
+    $esPsicologo = ($id_rol == 1);
+?>
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;">
     <p style="margin: 0; color: #555;">Listado de informes generados. Puede filtrarlos por paciente o rango de fechas.</p>
-    <a href="<?php echo BASE_URL; ?>/reportes/nuevo" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; text-decoration: none; white-space: nowrap;">
-        ➕ Nuevo Informe
-    </a>
+    <?php if ($esPsicologo): ?>
+        <a href="<?php echo BASE_URL; ?>/reportes/nuevo" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; text-decoration: none; white-space: nowrap;">
+            ➕ Nuevo Informe
+        </a>
+    <?php endif; ?>
 </div>
 
 <!-- Barra de filtros -->
@@ -49,10 +55,14 @@
             <?php if (empty($reportes)): ?>
                 <tr>
                     <td colspan="7" style="text-align: center; padding: 30px;">
-                        <div style="color: #888; margin-bottom: 12px;">No hay reportes guardados con esos criterios.</div>
-                        <a href="<?php echo BASE_URL; ?>/reportes/nuevo" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; text-decoration: none;">
-                            ➕ Generar el primer informe
-                        </a>
+                        <?php if ($esPsicologo): ?>
+                            <div style="color: #888; margin-bottom: 12px;">No hay reportes guardados con esos criterios.</div>
+                            <a href="<?php echo BASE_URL; ?>/reportes/nuevo" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; text-decoration: none;">
+                                ➕ Generar el primer informe
+                            </a>
+                        <?php else: ?>
+                            <div style="color: #888;">No hay reportes guardados con esos criterios.</div>
+                        <?php endif; ?>
                     </td>
                 </tr>
             <?php else: ?>
