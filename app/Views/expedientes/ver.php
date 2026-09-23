@@ -4,7 +4,12 @@
     <h2 style="color: var(--violeta-principal); margin: 0;">
         Expediente Clínico: EXP-<?php echo str_pad($expediente['id_expediente'], 5, "0", STR_PAD_LEFT); ?>
     </h2>
-    <a href="<?php echo BASE_URL; ?>/paciente" class="btn btn-secondary">Volver a Pacientes</a>
+    <div style="display: flex; gap: 8px; align-items: center;">
+        <a href="<?php echo BASE_URL; ?>/reportes/tecnico/<?php echo $expediente['id_expediente']; ?>" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; text-decoration: none; color: white; padding: 8px 14px;">
+            📄 Generar Informe
+        </a>
+        <a href="<?php echo BASE_URL; ?>/paciente" class="btn btn-secondary">Volver a Pacientes</a>
+    </div>
 </div>
 
 <?php if (isset($_GET['success']) && $_GET['success'] == 'sesion_guardada'): ?>

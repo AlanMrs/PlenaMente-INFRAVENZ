@@ -89,9 +89,23 @@
     }
 </style>
 
-<div style="max-width: 800px; margin: 0 auto 20px auto; display: flex; justify-content: space-between;" class="no-print">
+<div style="max-width: 800px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;" class="no-print">
     <a href="<?php echo BASE_URL; ?>/reportes" class="btn btn-secondary">⬅ Volver a Informes</a>
-    <button onclick="window.print()" class="btn btn-primary" style="background-color: #28a745; border: none;">🖨️ Imprimir / Guardar PDF</button>
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <form action="<?php echo BASE_URL; ?>/reportes/guardar" method="POST" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <input type="hidden" name="id_expediente" value="<?php echo $paciente['id_expediente']; ?>">
+            <input type="hidden" name="observaciones_generales" value="<?php echo htmlspecialchars($ultima_sesion['observaciones_generales'] ?? '', ENT_QUOTES); ?>">
+            <input type="hidden" name="intervencion_realizada" value="<?php echo htmlspecialchars($ultima_sesion['intervencion_realizada'] ?? '', ENT_QUOTES); ?>">
+            <input type="hidden" name="notas_evolucion" value="<?php echo htmlspecialchars($ultima_sesion['notas_evolucion'] ?? '', ENT_QUOTES); ?>">
+            <select name="nivel_urgencia" class="form-control" style="width: auto; padding: 8px;">
+                <option value="Bajo">Nivel: Bajo</option>
+                <option value="Medio">Nivel: Medio</option>
+                <option value="Alto">Nivel: Alto</option>
+            </select>
+            <button type="submit" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none;">💾 Guardar Informe</button>
+        </form>
+        <button onclick="window.print()" class="btn btn-primary" style="background-color: #28a745; border: none;">🖨️ Imprimir / Guardar PDF</button>
+    </div>
 </div>
 
 <div class="informe-container">
