@@ -36,4 +36,32 @@ class Cita {
         
         return $stmt->execute();
     }
+
+    // Citas del día actual, ordenadas cronológicamente
+    public function obtenerCitasHoy() {
+        $sql = "SELECT c.*, p.nombres, p.apellidos, p.nie_dui, p.tipo_paciente, p.grado_seccion,
+                       p.telefono_contacto, e.id_expediente
+                FROM citas c
+                INNER JOIN pacientes p ON c.id_paciente = p.id_paciente
+                LEFT JOIN expedientes e ON p.id_paciente = e.id_paciente
+                WHERE DATE(c.fecha_hora) = CURDATE()
+                ORDER BY c.fecha_hora ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Detalle completo de una cita con datos del paciente y expediente
+    public function obtenerPorId($id) {
+        $sql = "SELECT c.*, p.nombres, p.apellidos, p.nie_dui, p.tipo_paciente, p.grado_seccion,
+                       p.telefono_contacto, p.correo_paciente, p.nombre_responsable, e.id_expediente
+                FROM citas c
+                INNER JOIN pacientes p ON c.id_paciente = p.id_paciente
+                LEFT JOIN expedientes e ON p.id_paciente = e.id_paciente
+                WHERE c.id_cita = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }

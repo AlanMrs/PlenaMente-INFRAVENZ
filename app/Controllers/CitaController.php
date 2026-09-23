@@ -23,13 +23,33 @@ class CitaController extends Controller {
         }
     }
 
-    // Listar todas las citas agendadas
+    // Listar citas (por defecto las del día actual, ordenadas cronológicamente)
     public function index() {
         $modeloCita = $this->modelo('Cita');
-        $citas = $modeloCita->obtenerTodas();
+        $vista = $_GET['vista'] ?? 'hoy';
+        $citas = ($vista === 'todas') ? $modeloCita->obtenerTodas() : $modeloCita->obtenerCitasHoy();
 
         $this->vista('citas/index', [
             'citas' => $citas,
+            'vista' => $vista,
+            'flash' => Flash::all()
+        ]);
+    }
+
+    // Mostrar el detalle completo de una cita
+    public function ver($id_cita) {
+        $modeloCita = $this->modelo('Cita');
+        $cita = $modeloCita->obtenerPorId((int)$id_cita);
+
+        if (!$cita) {
+            Flash::error('Cita no encontrada.');
+            $this->redirect(BASE_URL . '/cita');
+        }
+
+        Logger::info('Detalle de cita visualizado', ['id_cita' => $id_cita, 'usuario' => $_SESSION['usuario_id']]);
+
+        $this->vista('citas/ver', [
+            'cita' => $cita,
             'flash' => Flash::all()
         ]);
     }

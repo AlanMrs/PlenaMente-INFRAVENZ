@@ -22,11 +22,14 @@ class Controller {
     // Método para cargar una vista visual (HTML)
     public function vista($vista, $datos = []) {
         $datos['flash'] = $datos['flash'] ?? Flash::all();
+        // Ruta capturada ANTES del extract() para que ningún dato de la vista
+        // pueda sobrescribir la variable $vista que define la ruta a cargar
+        $__rutaVista = __DIR__ . '/../Views/' . $vista . '.php';
         // Verifica si el archivo de la vista existe
-        if (file_exists(__DIR__ . '/../Views/' . $vista . '.php')) {
+        if (file_exists($__rutaVista)) {
             // Extrae los datos para que puedan usarse como variables en la vista
             extract($datos);
-            require_once __DIR__ . '/../Views/' . $vista . '.php';
+            require_once $__rutaVista;
         } else {
             Logger::error("Vista no encontrada: {$vista}");
             die("La vista '$vista' no existe en el sistema.");

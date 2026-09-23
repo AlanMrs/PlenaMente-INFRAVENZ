@@ -65,7 +65,8 @@ $id_rol = $_SESSION['id_rol'] ?? 0;
                         </td>
                         
                         <?php if($id_rol == 1): ?>
-                            <td>
+                            <td style="white-space: nowrap;">
+                                <a href="<?php echo BASE_URL; ?>/cita/ver/<?php echo $cita['id_cita']; ?>" class="btn btn-primary" style="background-color: var(--violeta-principal); padding: 6px 12px; font-size: 12px; text-decoration: none; color: white; border: none; border-radius: 4px;">👁️ Detalle</a>
                                 <?php if(!empty($cita['id_expediente'])): ?>
                                     <a href="<?php echo BASE_URL; ?>/expediente/ver/<?php echo $cita['id_expediente']; ?>" class="btn btn-success" style="padding: 6px 12px; font-size: 12px; text-decoration: none; color: white; background-color: #20c997; border: none; border-radius: 4px;">Expediente</a>
                                 <?php else: ?>
