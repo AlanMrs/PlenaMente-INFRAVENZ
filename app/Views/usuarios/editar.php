@@ -21,8 +21,9 @@
         <div style="margin-bottom: 15px;">
             <label style="display: block; margin-bottom: 5px;">Rol del Usuario:</label>
             <select name="id_rol" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                <option value="1" <?php echo ($usuario['id_rol'] == 1) ? 'selected' : ''; ?>>Administrador</option>
-                <option value="2" <?php echo ($usuario['id_rol'] == 2) ? 'selected' : ''; ?>>Psicólogo/a</option>
+                <option value="1" <?php echo ($usuario['id_rol'] == 1) ? 'selected' : ''; ?>>Psicólogo/a</option>
+                <option value="2" <?php echo ($usuario['id_rol'] == 2) ? 'selected' : ''; ?>>Director/a</option>
+                <option value="3" <?php echo ($usuario['id_rol'] == 3) ? 'selected' : ''; ?>></option>
             </select>
         </div>
 

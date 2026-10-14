@@ -27,8 +27,9 @@
             <label style="display: block; margin-bottom: 5px;">Rol del Usuario:</label>
             <select name="id_rol" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                 <option value="">Seleccione un rol...</option>
-                <option value="1">Administrador</option>
-                <option value="2">Psicólogo/a</option>
+                <option value="1">Psicólogo/a</option>
+                <option value="2">Director/a</option>
+                <option value="3">Administrador</option>
             </select>
         </div>
 

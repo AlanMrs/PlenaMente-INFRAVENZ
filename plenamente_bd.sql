@@ -186,6 +186,34 @@ INSERT INTO `sesiones_clinicas` (`id_sesion`, `id_cita`, `id_expediente`, `tipo_
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `historial_expedientes`
+--
+
+CREATE TABLE `historial_expedientes` (
+  `id_historial` int(11) NOT NULL,
+  `id_expediente` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `tipo_cambio` varchar(50) NOT NULL,
+  `valor_anterior` text DEFAULT NULL,
+  `valor_nuevo` text DEFAULT NULL,
+  `fecha_modificacion` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Estructura de tabla para la tabla `historial_sesiones`
+--
+
+CREATE TABLE `historial_sesiones` (
+  `id_historial` int(11) NOT NULL,
+  `id_sesion` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `campo` varchar(50) NOT NULL,
+  `valor_anterior` text DEFAULT NULL,
+  `valor_nuevo` text DEFAULT NULL,
+  `fecha_modificacion` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
 -- Estructura de tabla para la tabla `usuarios`
 --
 
@@ -208,6 +236,20 @@ INSERT INTO `usuarios` (`id_usuario`, `id_rol`, `nombre_completo`, `correo`, `pa
 (3, 1, 'Blanca Miriam Cruz', 'bmcruz@infravenz.edu.sv', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Activo'),
 (4, 2, 'Carmen Antonio Flores García', 'amflores@infravenz.edu.sv', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Activo'),
 (6, 2, 'Josefina Sandra López Rubio', 'sjlopez@infravenz.edu.sv', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Inactivo');
+
+--
+-- Estructura de tabla para la tabla `recuperaciones_password`
+--
+
+CREATE TABLE `recuperaciones_password` (
+  `id_recuperacion` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `codigo_hash` varchar(255) NOT NULL,
+  `expira_en` datetime NOT NULL,
+  `intentos` int(11) NOT NULL DEFAULT 0,
+  `usado` tinyint(1) NOT NULL DEFAULT 0,
+  `creado_en` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Índices para tablas volcadas
@@ -236,6 +278,22 @@ ALTER TABLE `expedientes`
   ADD UNIQUE KEY `id_paciente` (`id_paciente`);
 
 --
+-- Indices de la tabla `historial_expedientes`
+--
+ALTER TABLE `historial_expedientes`
+  ADD PRIMARY KEY (`id_historial`),
+  ADD KEY `fk_historial_expedientes` (`id_expediente`),
+  ADD KEY `fk_historial_usuarios` (`id_usuario`);
+
+--
+-- Indices de la tabla `historial_sesiones`
+--
+ALTER TABLE `historial_sesiones`
+  ADD PRIMARY KEY (`id_historial`),
+  ADD KEY `fk_historial_sesiones` (`id_sesion`),
+  ADD KEY `fk_historial_sesiones_usuarios` (`id_usuario`);
+
+--
 -- Indices de la tabla `pacientes`
 --
 ALTER TABLE `pacientes`
@@ -249,6 +307,13 @@ ALTER TABLE `reportes`
   ADD PRIMARY KEY (`id_reporte`),
   ADD KEY `fk_reportes_expedientes` (`id_expediente`),
   ADD KEY `fk_reportes_usuarios` (`id_usuario_autor`);
+
+--
+-- Indices de la tabla `recuperaciones_password`
+--
+ALTER TABLE `recuperaciones_password`
+  ADD PRIMARY KEY (`id_recuperacion`),
+  ADD KEY `fk_recuperaciones_usuarios` (`id_usuario`);
 
 --
 -- Indices de la tabla `roles`
@@ -295,6 +360,18 @@ ALTER TABLE `expedientes`
   MODIFY `id_expediente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT de la tabla `historial_expedientes`
+--
+ALTER TABLE `historial_expedientes`
+  MODIFY `id_historial` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
+
+--
+-- AUTO_INCREMENT de la tabla `historial_sesiones`
+--
+ALTER TABLE `historial_sesiones`
+  MODIFY `id_historial` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
+
+--
 -- AUTO_INCREMENT de la tabla `pacientes`
 --
 ALTER TABLE `pacientes`
@@ -305,6 +382,12 @@ ALTER TABLE `pacientes`
 --
 ALTER TABLE `reportes`
   MODIFY `id_reporte` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `recuperaciones_password`
+--
+ALTER TABLE `recuperaciones_password`
+  MODIFY `id_recuperacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 --
 -- AUTO_INCREMENT de la tabla `roles`
@@ -348,11 +431,31 @@ ALTER TABLE `expedientes`
   ADD CONSTRAINT `fk_expedientes_pacientes` FOREIGN KEY (`id_paciente`) REFERENCES `pacientes` (`id_paciente`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Filtros para la tabla `historial_expedientes`
+--
+ALTER TABLE `historial_expedientes`
+  ADD CONSTRAINT `fk_historial_expedientes` FOREIGN KEY (`id_expediente`) REFERENCES `expedientes` (`id_expediente`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_historial_usuarios` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `historial_sesiones`
+--
+ALTER TABLE `historial_sesiones`
+  ADD CONSTRAINT `fk_historial_sesiones` FOREIGN KEY (`id_sesion`) REFERENCES `sesiones_clinicas` (`id_sesion`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_historial_sesiones_usuarios` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON UPDATE CASCADE;
+
+--
 -- Filtros para la tabla `reportes`
 --
 ALTER TABLE `reportes`
   ADD CONSTRAINT `fk_reportes_expedientes` FOREIGN KEY (`id_expediente`) REFERENCES `expedientes` (`id_expediente`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_reportes_usuarios` FOREIGN KEY (`id_usuario_autor`) REFERENCES `usuarios` (`id_usuario`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `recuperaciones_password`
+--
+ALTER TABLE `recuperaciones_password`
+  ADD CONSTRAINT `fk_recuperaciones_usuarios` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `sesiones_clinicas`

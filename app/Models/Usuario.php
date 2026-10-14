@@ -86,5 +86,71 @@ class Usuario {
         $stmt->bindValue(':id', $id);
         return $stmt->execute();
     }
+
+    // —— Recuperación de contraseña ——
+
+    // Obtiene el código activo (no usado y sin expirar) más reciente del usuario
+    public function obtenerCodigoActivo($idUsuario, $ahora) {
+        $sql = "SELECT * FROM recuperaciones_password 
+                WHERE id_usuario = :id_usuario AND usado = 0 AND expira_en > :ahora 
+                ORDER BY id_recuperacion DESC LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_usuario', $idUsuario);
+        $stmt->bindValue(':ahora', $ahora);
+        $stmt->execute();
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    // Guarda un código de recuperación (solo su hash bcrypt)
+    public function guardarCodigoRecuperacion($idUsuario, $codigoHash, $expiraEn) {
+        $sql = "INSERT INTO recuperaciones_password (id_usuario, codigo_hash, expira_en, usado, creado_en) 
+                VALUES (:id_usuario, :codigo_hash, :expira_en, 0, NOW())";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_usuario', $idUsuario);
+        $stmt->bindValue(':codigo_hash', $codigoHash);
+        $stmt->bindValue(':expira_en', $expiraEn);
+        return $stmt->execute();
+    }
+
+    // Cuenta códigos generados en los últimos 15 minutos (límite de reenvíos)
+    public function contarRecuperacionesRecientes($idUsuario) {
+        $sql = "SELECT COUNT(*) AS total FROM recuperaciones_password 
+                WHERE id_usuario = :id_usuario AND creado_en > (NOW() - INTERVAL 15 MINUTE)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_usuario', $idUsuario);
+        $stmt->execute();
+        $res = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return (int)($res['total'] ?? 0);
+    }
+
+    public function incrementarIntentosRecuperacion($idRecuperacion) {
+        $sql = "UPDATE recuperaciones_password SET intentos = intentos + 1 WHERE id_recuperacion = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id', $idRecuperacion);
+        return $stmt->execute();
+    }
+
+    public function marcarRecuperacionUsada($idRecuperacion) {
+        $sql = "UPDATE recuperaciones_password SET usado = 1 WHERE id_recuperacion = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id', $idRecuperacion);
+        return $stmt->execute();
+    }
+
+    // Invalida todos los códigos pendientes del usuario (al restablecer la contraseña)
+    public function invalidarRecuperaciones($idUsuario) {
+        $sql = "UPDATE recuperaciones_password SET usado = 1 WHERE id_usuario = :id_usuario AND usado = 0";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_usuario', $idUsuario);
+        return $stmt->execute();
+    }
+
+    public function actualizarPassword($idUsuario, $passwordHash) {
+        $sql = "UPDATE usuarios SET password_hash = :password_hash WHERE id_usuario = :id_usuario";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':password_hash', $passwordHash);
+        $stmt->bindValue(':id_usuario', $idUsuario);
+        return $stmt->execute();
+    }
 }
 ?>
