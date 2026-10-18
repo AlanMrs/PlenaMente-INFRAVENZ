@@ -20,6 +20,70 @@
     </div>
 <?php endif; ?>
 
+<style>
+    .fichas-sesiones {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .ficha-sesion {
+        overflow: hidden;
+    }
+    .ficha-sesion > summary {
+        list-style: none;
+        user-select: none;
+    }
+    .ficha-sesion > summary::-webkit-details-marker {
+        display: none;
+    }
+    .ficha-sesion .flecha {
+        display: inline-block;
+        font-size: 14px;
+        font-weight: bold;
+        color: #999;
+        transition: transform 0.25s ease;
+        line-height: 1;
+    }
+    .ficha-sesion[open] .flecha {
+        transform: rotate(180deg);
+        color: var(--violeta-principal);
+    }
+    .ficha-sesion[open] {
+        border-color: var(--violeta-principal);
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.12);
+    }
+
+    /* Pestañas: ambos paneles comparten el mismo espacio */
+    .tab-bar {
+        display: flex;
+        gap: 6px;
+        border-bottom: 2px solid #eee;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-bottom: none;
+        padding: 10px 18px;
+        font-size: 13px;
+        font-weight: bold;
+        color: #6b7280;
+        border-radius: 8px 8px 0 0;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .tab-btn:hover {
+        background: #e9e7f7;
+        color: var(--violeta-principal);
+    }
+    .tab-btn.active {
+        background: var(--violeta-principal);
+        color: white;
+        border-color: var(--violeta-principal);
+    }
+</style>
+
 <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 25px; align-items: start;">
     
     <div class="card" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-top: 4px solid var(--violeta-principal);">
@@ -73,12 +137,22 @@
     </div>
 
     <div class="card" style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; flex-wrap: wrap;">
             <div>
-                <h3 style="margin: 0; color: #333;">Historial de Sesiones Clínicas</h3>
+                <h3 style="margin: 0; color: #333;">Panel Clínico</h3>
                 <span style="font-size: 12px; color: #888;"><?php echo $total_sesiones; ?> sesión(es) registrada(s)</span>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        </div>
+
+        <!-- Barra de pestañas: Sesiones y Historial comparten el mismo espacio -->
+        <div class="tab-bar">
+            <button type="button" class="tab-btn active" data-tab="panel-sesiones">🗓️ Sesiones Clínicas</button>
+            <button type="button" class="tab-btn" data-tab="panel-historial">🕓 Historial de Cambios (<?php echo count($historial); ?>)</button>
+        </div>
+
+        <!-- Panel: Sesiones Clínicas -->
+        <div id="panel-sesiones" class="tab-panel">
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 18px;">
                 <a href="<?php echo BASE_URL; ?>/expediente/ver/<?php echo $expediente['id_expediente']; ?>?orden=desc" class="btn" style="<?php echo ($orden === 'DESC') ? 'background-color: var(--violeta-principal); color: white; border: none;' : 'background-color: #e9ecef; color: #333; text-decoration: none;'; ?> padding: 8px 12px; font-size: 13px;">
                     🕒 Más recientes
                 </a>
@@ -89,7 +163,6 @@
                     ➕ Registrar Sesión
                 </a>
             </div>
-        </div>
 
         <?php if (empty($sesiones)): ?>
             <div style="text-align: center; padding: 40px; color: #888; background: #fafafa; border: 2px dashed #eee; border-radius: 6px;">
@@ -97,27 +170,24 @@
                 <p style="margin: 0; font-size: 13px; color: #aaa;">Presione el botón "Registrar Sesión" para documentar la primera intervención.</p>
             </div>
         <?php else: ?>
-            <div style="border-left: 3px solid #e0e0e0; padding-left: 20px; margin-left: 10px;">
-                <?php foreach ($sesiones as $index => $sesion): ?>
-                    <?php $num_sesion = ($orden === 'ASC') ? ($index + 1) : ($total_sesiones - $index); ?>
-                    <div style="position: relative; margin-bottom: 15px;">
-                        <div style="position: absolute; width: 12px; height: 12px; background: var(--violeta-principal); border: 3px solid white; border-radius: 50%; left: -29px; top: 14px; box-shadow: 0 0 0 2px var(--violeta-principal);"></div>
-
-                        <details <?php echo ($index === 0) ? 'open' : ''; ?> style="background: #fdfdfd; border: 1px solid #eaeaea; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                            <summary style="padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-<div style="display: flex; align-items: center; gap: 10px;">
-                                        <span style="font-weight: bold; color: #333; word-break: break-word;">Sesión Clínica #<?php echo $num_sesion; ?></span>
-                                        <span style="background: #e3f2fd; color: #0d47a1; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #bbdefb; white-space: nowrap;">
-                                            💼 <?php echo htmlspecialchars($sesion['tipo_consulta'] ?? 'Seguimiento'); ?>
-                                        </span>
-                                    </div>
-                                    <span style="font-size: 13px; color: #777; font-weight: bold; background: #eee; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">
-                                        📅 <?php echo date('d/m/Y h:i A', strtotime($sesion['fecha_registro'])); ?>
-                                    </span>
-                                    <a href="<?php echo BASE_URL; ?>/expediente/editar_sesion/<?php echo $sesion['id_sesion']; ?>" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px; text-decoration: none; color: white; background-color: var(--violeta-principal); border: none; border-radius: 4px; white-space: nowrap;">
-                                        ✏️ Editar
-                                    </a>
-                                </summary>
+            <div class="fichas-sesiones">
+                <?php foreach ($sesiones as $sesion): ?>
+                    <?php $titulo_sesion = date('d/m/Y h:i A', strtotime($sesion['fecha_registro'])); ?>
+                    <details class="ficha-sesion" style="background: #fdfdfd; border: 1px solid #eaeaea; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                        <summary style="padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0;">
+                                <span style="font-weight: bold; color: #333; word-break: break-word;">📅 Sesión <?php echo $titulo_sesion; ?></span>
+                                <span style="background: #e3f2fd; color: #0d47a1; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid #bbdefb; white-space: nowrap;">
+                                    💼 <?php echo htmlspecialchars($sesion['tipo_consulta'] ?? 'Seguimiento'); ?>
+                                </span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <a href="<?php echo BASE_URL; ?>/expediente/editar_sesion/<?php echo $sesion['id_sesion']; ?>" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px; text-decoration: none; color: white; background-color: var(--violeta-principal); border: none; border-radius: 4px; white-space: nowrap;">
+                                    ✏️ Editar
+                                </a>
+                                <span class="flecha">▾</span>
+                            </div>
+                        </summary>
 
                             <div style="padding: 10px 15px 15px 15px; font-size: 14px; color: #444; display: grid; gap: 10px; border-top: 1px dashed #eee; min-width: 0;">
                                 <p style="margin: 0; word-break: break-word; overflow-wrap: anywhere;"><strong>Observaciones Generales:</strong><br>
@@ -164,47 +234,47 @@
                                 <?php endif; ?>
                             </div>
                         </details>
-                    </div>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
+        </div><!-- /panel-sesiones -->
+
+        <!-- Panel: Historial de Cambios de Antecedentes (mismo espacio que las sesiones) -->
+        <div id="panel-historial" class="tab-panel" style="display: none;">
+            <?php if (empty($historial)): ?>
+                <div style="text-align: center; padding: 40px; color: #888; background: #fafafa; border: 2px dashed #eee; border-radius: 6px;">
+                    <p style="margin: 0 0 10px 0; font-size: 16px;">Aún no hay cambios registrados en los antecedentes.</p>
+                    <p style="margin: 0; font-size: 13px; color: #aaa;">Cuando edite los antecedentes, los cambios aparecerán aquí.</p>
+                </div>
+            <?php else: ?>
+                <div style="overflow-x: auto; max-width: 100%;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #eee; color: #555;">
+                                <th style="padding: 10px; width: 20%;">Fecha</th>
+                                <th style="padding: 10px; width: 16%;">Campo</th>
+                                <th style="padding: 10px; width: 18%;">Psicólogo</th>
+                                <th style="padding: 10px; width: 23%;">Valor Anterior</th>
+                                <th style="padding: 10px; width: 23%;">Valor Nuevo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($historial as $h): ?>
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 10px; white-space: nowrap;"><?php echo date('d/m/Y h:i A', strtotime($h['fecha_modificacion'])); ?></td>
+                                    <td style="padding: 10px; font-weight: bold; word-break: break-word;"><?php echo htmlspecialchars($h['tipo_cambio']); ?></td>
+                                    <td style="padding: 10px; word-break: break-word;"><?php echo htmlspecialchars($h['nombre_completo']); ?></td>
+                                    <td style="padding: 10px; color: #856404; word-break: break-word; overflow-wrap: anywhere;"><?php echo $h['valor_anterior'] ? nl2br(htmlspecialchars($h['valor_anterior'])) : '<i style="color:#aaa;">Vacío</i>'; ?></td>
+                                    <td style="padding: 10px; color: #155724; word-break: break-word; overflow-wrap: anywhere;"><?php echo $h['valor_nuevo'] ? nl2br(htmlspecialchars($h['valor_nuevo'])) : '<i style="color:#aaa;">Vacío</i>'; ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div><!-- /panel-historial -->
     </div>
 </div>
-
-<?php if (!empty($historial)): ?>
-<!-- Historial de cambios de antecedentes -->
-<div class="card" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-top: 20px;">
-    <details>
-        <summary style="cursor: pointer; font-weight: bold; color: var(--violeta-principal);">
-            🕓 Historial de Cambios de Antecedentes (<?php echo count($historial); ?>)
-        </summary>
-        <div style="margin-top: 15px; overflow-x: auto; max-width: 100%;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; table-layout: fixed;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #eee; color: #555;">
-                        <th style="padding: 10px; width: 20%;">Fecha</th>
-                        <th style="padding: 10px; width: 16%;">Campo</th>
-                        <th style="padding: 10px; width: 18%;">Psicólogo</th>
-                        <th style="padding: 10px; width: 23%;">Valor Anterior</th>
-                        <th style="padding: 10px; width: 23%;">Valor Nuevo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($historial as $h): ?>
-                        <tr style="border-bottom: 1px solid #eee;">
-                            <td style="padding: 10px; white-space: nowrap;"><?php echo date('d/m/Y h:i A', strtotime($h['fecha_modificacion'])); ?></td>
-                            <td style="padding: 10px; font-weight: bold; word-break: break-word;"><?php echo htmlspecialchars($h['tipo_cambio']); ?></td>
-                            <td style="padding: 10px; word-break: break-word;"><?php echo htmlspecialchars($h['nombre_completo']); ?></td>
-                            <td style="padding: 10px; color: #856404; word-break: break-word; overflow-wrap: anywhere;"><?php echo $h['valor_anterior'] ? nl2br(htmlspecialchars($h['valor_anterior'])) : '<i style="color:#aaa;">Vacío</i>'; ?></td>
-                            <td style="padding: 10px; color: #155724; word-break: break-word; overflow-wrap: anywhere;"><?php echo $h['valor_nuevo'] ? nl2br(htmlspecialchars($h['valor_nuevo'])) : '<i style="color:#aaa;">Vacío</i>'; ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </details>
-</div>
-<?php endif; ?>
 
 <!-- Navegación entre expedientes (anterior / siguiente) -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee;">
@@ -222,5 +292,34 @@
         </a>
     <?php endif; ?>
 </div>
+
+<script>
+// Pestañas: alternar entre Sesiones y Historial de Cambios (mismo espacio en pantalla)
+document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var destino = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+        document.querySelectorAll('.tab-panel').forEach(function (p) { p.style.display = 'none'; });
+        btn.classList.add('active');
+        var panel = document.getElementById(destino);
+        if (panel) { panel.style.display = 'block'; }
+    });
+});
+
+// Modo fichas: al abrir una sesión se cierran las demás (mantiene la pantalla visible)
+document.querySelectorAll('.fichas-sesiones').forEach(function (contenedor) {
+    contenedor.querySelectorAll(':scope > .ficha-sesion').forEach(function (ficha) {
+        ficha.addEventListener('toggle', function () {
+            if (ficha.open) {
+                contenedor.querySelectorAll(':scope > .ficha-sesion[open]').forEach(function (otra) {
+                    if (otra !== ficha) {
+                        otra.open = false;
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
