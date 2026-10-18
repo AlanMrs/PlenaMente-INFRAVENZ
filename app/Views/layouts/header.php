@@ -33,6 +33,7 @@
             <?php if ($id_rol == 1): ?>
                 <a href="<?php echo BASE_URL; ?>/paciente" class="menu-item">👥 Pacientes</a>
                 <a href="<?php echo BASE_URL; ?>/cita" class="menu-item">📅 Citas</a>
+                <a href="<?php echo BASE_URL; ?>/recordatorio" class="menu-item">🔔 Recordatorios</a>
                 <a href="<?php echo BASE_URL; ?>/asistencia" class="menu-item">📝 Asistencias</a>
                 <a href="<?php echo BASE_URL; ?>/expediente" class="menu-item">📁 Expedientes</a>
             <?php endif; ?>

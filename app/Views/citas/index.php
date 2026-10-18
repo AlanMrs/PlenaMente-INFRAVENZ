@@ -97,6 +97,11 @@
                                 <a href="<?php echo BASE_URL; ?>/cita/cancelar/<?php echo $cita['id_cita']; ?>" class="btn" style="background-color: #dc3545; border: none; padding: 6px 12px; font-size: 13px; text-decoration: none; color: white; border-radius: 4px; display: inline-block;">
                                     🚫 Cancelar
                                 </a>
+                                <form method="POST" action="<?php echo BASE_URL; ?>/recordatorio/enviar/<?php echo $cita['id_cita']; ?>" style="display: inline;">
+                                    <button type="submit" class="btn" style="background-color: #6f42c1; border: none; padding: 6px 12px; font-size: 13px; color: white; border-radius: 4px; cursor: pointer; display: inline-block;">
+                                        🔔 Recordatorio
+                                    </button>
+                                </form>
                             <?php endif; ?>
                         </td>
                     </tr>

@@ -55,6 +55,11 @@ $badge_color = $estado == 'Programada' ? '#ffc107' : ($estado == 'Completada' ? 
                 <a href="<?php echo BASE_URL; ?>/cita/cancelar/<?php echo $cita['id_cita']; ?>" class="btn" style="background-color: #dc3545; border: none; text-decoration: none; color: white;">
                     🚫 Cancelar Cita
                 </a>
+                <form method="POST" action="<?php echo BASE_URL; ?>/recordatorio/enviar/<?php echo $cita['id_cita']; ?>" style="display: inline;">
+                    <button type="submit" class="btn" style="background-color: #6f42c1; border: none; text-decoration: none; color: white; cursor: pointer;">
+                        🔔 Enviar Recordatorio
+                    </button>
+                </form>
             <?php endif; ?>
             <?php if (!empty($cita['id_expediente'])): ?>
                 <a href="<?php echo BASE_URL; ?>/expediente/ver/<?php echo $cita['id_expediente']; ?>" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; text-decoration: none; color: white;">

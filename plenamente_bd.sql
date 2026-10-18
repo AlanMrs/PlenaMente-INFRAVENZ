@@ -255,6 +255,21 @@ CREATE TABLE `recuperaciones_password` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
+-- Estructura de tabla para la tabla `recordatorios_citas`
+--
+
+CREATE TABLE `recordatorios_citas` (
+  `id_recordatorio` int(11) NOT NULL,
+  `id_cita` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `canal` varchar(20) NOT NULL DEFAULT 'Correo',
+  `destinatario` varchar(150) NOT NULL,
+  `mensaje` text DEFAULT NULL,
+  `estado` enum('Enviado','Fallido') NOT NULL,
+  `fecha_envio` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
 -- Índices para tablas volcadas
 --
 
@@ -319,6 +334,14 @@ ALTER TABLE `reportes`
 ALTER TABLE `recuperaciones_password`
   ADD PRIMARY KEY (`id_recuperacion`),
   ADD KEY `fk_recuperaciones_usuarios` (`id_usuario`);
+
+--
+-- Indices de la tabla `recordatorios_citas`
+--
+ALTER TABLE `recordatorios_citas`
+  ADD PRIMARY KEY (`id_recordatorio`),
+  ADD KEY `fk_recordatorios_citas` (`id_cita`),
+  ADD KEY `fk_recordatorios_usuarios` (`id_usuario`);
 
 --
 -- Indices de la tabla `roles`
@@ -395,6 +418,12 @@ ALTER TABLE `recuperaciones_password`
   MODIFY `id_recuperacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
 
 --
+-- AUTO_INCREMENT de la tabla `recordatorios_citas`
+--
+ALTER TABLE `recordatorios_citas`
+  MODIFY `id_recordatorio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
+
+--
 -- AUTO_INCREMENT de la tabla `roles`
 --
 ALTER TABLE `roles`
@@ -462,6 +491,13 @@ ALTER TABLE `reportes`
 --
 ALTER TABLE `recuperaciones_password`
   ADD CONSTRAINT `fk_recuperaciones_usuarios` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `recordatorios_citas`
+--
+ALTER TABLE `recordatorios_citas`
+  ADD CONSTRAINT `fk_recordatorios_citas` FOREIGN KEY (`id_cita`) REFERENCES `citas` (`id_cita`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_recordatorios_usuarios` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `sesiones_clinicas`
