@@ -52,6 +52,9 @@ $badge_color = $estado == 'Programada' ? '#ffc107' : ($estado == 'Completada' ? 
                 <a href="<?php echo BASE_URL; ?>/expediente/atender_cita/<?php echo $cita['id_cita']; ?>" class="btn btn-success" style="background-color: #28a745; border: none; text-decoration: none; color: white;">
                     ▶️ Atender Cita
                 </a>
+                <a href="<?php echo BASE_URL; ?>/cita/cancelar/<?php echo $cita['id_cita']; ?>" class="btn" style="background-color: #dc3545; border: none; text-decoration: none; color: white;">
+                    🚫 Cancelar Cita
+                </a>
             <?php endif; ?>
             <?php if (!empty($cita['id_expediente'])): ?>
                 <a href="<?php echo BASE_URL; ?>/expediente/ver/<?php echo $cita['id_expediente']; ?>" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; text-decoration: none; color: white;">
@@ -100,5 +103,27 @@ $badge_color = $estado == 'Programada' ? '#ffc107' : ($estado == 'Completada' ? 
         </table>
     </div>
 </div>
+
+<?php if ($estado == 'Cancelada'): ?>
+    <div class="card" style="background: #f8d7da; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid #dc3545;">
+        <h3 style="margin-top: 0; margin-bottom: 16px; color: #721c24;">🚫 Información de la Cancelación</h3>
+        <table class="table" style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 8px 0; color: #721c24; width: 40%;">Motivo</td>
+                <td style="padding: 8px 0; color: #721c24;"><strong><?php echo htmlspecialchars($cita['motivo_cancelacion'] ?? 'No registrado'); ?></strong></td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: #721c24;">Fecha de cancelación</td>
+                <td style="padding: 8px 0; color: #721c24;">
+                    <?php echo !empty($cita['fecha_cancelacion']) ? date('d/m/Y g:i A', strtotime($cita['fecha_cancelacion'])) : 'No registrada'; ?>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; color: #721c24;">Cancelada por</td>
+                <td style="padding: 8px 0; color: #721c24;"><?php echo !empty($cita['nombre_cancela']) ? htmlspecialchars($cita['nombre_cancela']) : 'No registrado'; ?></td>
+            </tr>
+        </table>
+    </div>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

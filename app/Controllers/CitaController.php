@@ -23,16 +23,59 @@ class CitaController extends Controller {
         }
     }
 
-    // Listar citas (por defecto las del día actual, ordenadas cronológicamente)
+    // Listar citas (por defecto las del día actual, ordenadas cronológicamente, paginadas)
     public function index() {
         $modeloCita = $this->modelo('Cita');
         $vista = $_GET['vista'] ?? 'hoy';
-        $citas = ($vista === 'todas') ? $modeloCita->obtenerTodas() : $modeloCita->obtenerCitasHoy();
+        if (!in_array($vista, ['hoy', 'todas'], true)) {
+            $vista = 'hoy';
+        }
+
+        $porPagina = 10;
+        $pagina = max(1, (int)($_GET['pagina'] ?? 1));
+
+        // Filtro por rango de fechas (solo aplica a "Todas las Citas")
+        $patronFecha = '/^\d{4}-\d{2}-\d{2}$/';
+        $desde = trim($_GET['desde'] ?? '');
+        $hasta = trim($_GET['hasta'] ?? '');
+        if ($vista !== 'todas' || !preg_match($patronFecha, $desde)) {
+            $desde = '';
+        }
+        if ($vista !== 'todas' || !preg_match($patronFecha, $hasta)) {
+            $hasta = '';
+        }
+        if ($desde !== '' && $hasta !== '' && $desde > $hasta) {
+            $tmp = $desde;
+            $desde = $hasta;
+            $hasta = $tmp;
+        }
+
+        if ($vista === 'todas') {
+            $total = $modeloCita->contarTodas($desde ?: null, $hasta ?: null);
+        } else {
+            $total = $modeloCita->contarCitasHoy();
+        }
+        $totalPaginas = max(1, (int)ceil($total / $porPagina));
+        if ($pagina > $totalPaginas) {
+            $pagina = $totalPaginas;
+        }
+        $offset = ($pagina - 1) * $porPagina;
+
+        $citas = ($vista === 'todas')
+            ? $modeloCita->obtenerTodas($porPagina, $offset, $desde ?: null, $hasta ?: null)
+            : $modeloCita->obtenerCitasHoy($porPagina, $offset);
 
         $this->vista('citas/index', [
-            'citas' => $citas,
-            'vista' => $vista,
-            'flash' => Flash::all()
+            'citas'        => $citas,
+            'vista'        => $vista,
+            'pagina'       => $pagina,
+            'totalPaginas' => $totalPaginas,
+            'total'        => $total,
+            'porPagina'    => $porPagina,
+            'offset'       => $offset,
+            'desde'        => $desde,
+            'hasta'        => $hasta,
+            'flash'        => Flash::all()
         ]);
     }
 
@@ -97,5 +140,52 @@ class CitaController extends Controller {
                 exit();
             }
         }
+    }
+
+    // Cancelar una cita: GET muestra el formulario con el motivo, POST lo registra
+    public function cancelar($id_cita) {
+        $modeloCita = $this->modelo('Cita');
+        $cita = $modeloCita->obtenerPorId((int)$id_cita);
+
+        if (!$cita) {
+            Flash::error('Cita no encontrada.');
+            $this->redirect(BASE_URL . '/cita');
+        }
+
+        if ($cita['estado_cita'] !== 'Programada') {
+            Flash::warning('Solo se pueden cancelar citas en estado Programada.');
+            $this->redirect(BASE_URL . '/cita/ver/' . $cita['id_cita']);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $motivo = trim($_POST['motivo_cancelacion'] ?? '');
+
+            if (strlen($motivo) < 5) {
+                Flash::error('Debes indicar el motivo de la cancelación (mínimo 5 caracteres).');
+                $this->redirect(BASE_URL . '/cita/cancelar/' . $cita['id_cita']);
+            }
+
+            $id_usuario_cancela = (int)$_SESSION['usuario_id'];
+            $exito = $modeloCita->cancelarCita((int)$cita['id_cita'], $motivo, $id_usuario_cancela);
+
+            if ($exito) {
+                Logger::info('Cita cancelada', [
+                    'id_cita' => $cita['id_cita'],
+                    'usuario' => $id_usuario_cancela,
+                    'motivo'  => $motivo
+                ]);
+                Flash::success('La cita fue cancelada correctamente. El cambio se refleja en la agenda.');
+                $this->redirect(BASE_URL . '/cita/ver/' . $cita['id_cita']);
+            } else {
+                Logger::error('No se pudo cancelar la cita', ['id_cita' => $cita['id_cita']]);
+                Flash::error('No se pudo cancelar la cita. Intenta nuevamente.');
+                $this->redirect(BASE_URL . '/cita/cancelar/' . $cita['id_cita']);
+            }
+        }
+
+        $this->vista('citas/cancelar', [
+            'cita'  => $cita,
+            'flash' => Flash::all()
+        ]);
     }
 }

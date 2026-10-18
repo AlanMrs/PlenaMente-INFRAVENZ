@@ -56,7 +56,10 @@ CREATE TABLE `citas` (
   `id_usuario_psicologo` int(11) NOT NULL,
   `fecha_hora` datetime NOT NULL,
   `motivo_cita` varchar(255) NOT NULL,
-  `estado_cita` enum('Programada','Completada','Cancelada','Inasistencia') DEFAULT 'Programada'
+  `estado_cita` enum('Programada','Completada','Cancelada','Inasistencia') DEFAULT 'Programada',
+  `motivo_cancelacion` varchar(255) DEFAULT NULL,
+  `fecha_cancelacion` datetime DEFAULT NULL,
+  `id_usuario_cancela` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -268,7 +271,9 @@ ALTER TABLE `asistencias`
 ALTER TABLE `citas`
   ADD PRIMARY KEY (`id_cita`),
   ADD KEY `fk_citas_pacientes` (`id_paciente`),
-  ADD KEY `fk_citas_usuarios` (`id_usuario_psicologo`);
+  ADD KEY `fk_citas_usuarios` (`id_usuario_psicologo`),
+  ADD KEY `fk_citas_usuario_cancela` (`id_usuario_cancela`),
+  ADD KEY `idx_citas_fecha_hora` (`fecha_hora`);
 
 --
 -- Indices de la tabla `expedientes`
@@ -422,7 +427,8 @@ ALTER TABLE `asistencias`
 --
 ALTER TABLE `citas`
   ADD CONSTRAINT `fk_citas_pacientes` FOREIGN KEY (`id_paciente`) REFERENCES `pacientes` (`id_paciente`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_citas_usuarios` FOREIGN KEY (`id_usuario_psicologo`) REFERENCES `usuarios` (`id_usuario`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_citas_usuarios` FOREIGN KEY (`id_usuario_psicologo`) REFERENCES `usuarios` (`id_usuario`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_citas_usuario_cancela` FOREIGN KEY (`id_usuario_cancela`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `expedientes`
