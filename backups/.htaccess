@@ -1,0 +1,29 @@
+# =====================================================
+# Carpeta de RESPALDOS (backups) - acceso bloqueado
+#
+# Los respaldos contienen informacion clinica sensible.
+# Esta carpeta esta FUERA del docroot, pero se bloquea
+# tambien por si el servidor se configura con la raiz
+# del proyecto como document root.
+# =====================================================
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+# Apache 2.2
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
+
+# No listar el directorio
+Options -Indexes
+
+# Prohibir la ejecucion de cualquier script dentro de la carpeta
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .pht
+RemoveType .php .phtml .php3 .php4 .php5 .php7 .pht

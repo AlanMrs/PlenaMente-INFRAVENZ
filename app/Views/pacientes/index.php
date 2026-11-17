@@ -49,7 +49,7 @@ if (!empty($busquedaActual)) {
         <a href="<?php echo BASE_URL; ?>/paciente<?php echo $qsToggle; ?>"
            class="btn btn-secondary"
            style="padding: 8px 16px; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap;">
-            <?php echo $verInactivos ? '🙈 Ocultar inactivos' : '👁️ Mostrar inactivos'; ?>
+            <?php echo $verInactivos ? '🙈 Ocultar eliminados' : '👁️ Mostrar eliminados'; ?>
         </a>
     </div>
     <table class="table">
@@ -81,7 +81,7 @@ if (!empty($busquedaActual)) {
                     <?php if ($activo): ?>
                         <span class="badge" style="background-color: #d4edda; color: #155724;">Activo</span>
                     <?php else: ?>
-                        <span class="badge" style="background-color: #f8d7da; color: #721c24;">Inactivo</span>
+                        <span class="badge" style="background-color: #f8d7da; color: #721c24;">Eliminado</span>
                     <?php endif; ?>
                 </td>
                 <td style="text-align: center;">
@@ -139,7 +139,7 @@ if (!empty($busquedaActual)) {
                     <?php if (!empty($busquedaActual)): ?>
                         No se encontraron pacientes que coincidan con la búsqueda.
                     <?php else: ?>
-                        No hay pacientes <?php echo $verInactivos ? '' : 'activos '; ?>registrados en el sistema. Haz clic en "+ Nuevo Paciente" para comenzar.
+                        No hay pacientes <?php echo $verInactivos ? 'eliminados' : 'activos'; ?> registrados en el sistema. Haz clic en "+ Nuevo Paciente" para comenzar.
                     <?php endif; ?>
                 </td>
             </tr>

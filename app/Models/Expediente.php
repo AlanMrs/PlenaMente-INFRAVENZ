@@ -198,7 +198,10 @@ class Expediente {
         $stmt->bindValue(':intervencion', $intervencion);
         $stmt->bindValue(':notas', $notas);
         
-        return $stmt->execute();
+        if ($stmt->execute()) {
+            return (int)$this->db->lastInsertId();
+        }
+        return false;
     }
 
     // Obtener los datos básicos de una cita (para saber qué paciente la agendó)

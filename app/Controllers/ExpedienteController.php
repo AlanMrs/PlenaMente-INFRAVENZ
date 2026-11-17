@@ -9,14 +9,7 @@ class ExpedienteController extends Controller {
 
     public function __construct() {
         parent::__construct();
-        
-        if (!isset($_SESSION['usuario_id'])) {
-            $this->redirect(BASE_URL . '/auth/login');
-        }
-
-        if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
-            $this->redirect(BASE_URL . '/dashboard');
-        }
+        $this->requiere('expedientes');
     }
 
     // Pantalla principal del listado de expedientes
@@ -71,6 +64,8 @@ class ExpedienteController extends Controller {
 
             if ($exito) {
                 Logger::info('Expediente creado', ['id_paciente' => $id_paciente]);
+                $this->auditar('CREAR', 'expediente', 0, 'Expediente clínico abierto para '
+                    . $this->nombrePaciente($id_paciente) . ' (apertura ' . date('d/m/Y', strtotime($fecha_apertura)) . ').');
                 Flash::success('Expediente abierto correctamente.');
                 $this->redirect(BASE_URL . '/expediente');
             } else {
@@ -172,6 +167,12 @@ class ExpedienteController extends Controller {
 
         if ($ok && $hayCambios) {
             Logger::info('Expediente actualizado', ['id_expediente' => $id_expediente, 'usuario' => $id_usuario]);
+            $campos = array_keys(array_filter($cambios, function ($par) {
+                return trim((string)($par[0] ?? '')) !== trim((string)($par[1] ?? ''));
+            }));
+            $this->auditar('ACTUALIZAR', 'expediente', $id_expediente, 'Antecedentes actualizados del expediente #'
+                . $id_expediente . ' (' . $expediente['nombres'] . ' ' . $expediente['apellidos'] . '). Campos modificados: '
+                . implode(', ', $campos) . '.');
             Flash::success('Expediente actualizado correctamente. Los cambios quedaron registrados en el historial.');
         } elseif ($ok) {
             Flash::info('No se registraron cambios: los valores son iguales a los actuales.');
@@ -224,6 +225,8 @@ class ExpedienteController extends Controller {
                 'nuevo' => $estado,
                 'usuario' => $id_usuario
             ]);
+            $this->auditar('ACTUALIZAR', 'expediente', $id_expediente, 'Estado del caso modificado de '
+                . $estadoAnterior . ' a ' . $estado . ' (expediente #' . $id_expediente . ').');
             Flash::success('Estado del caso actualizado a "' . $estado . '". El cambio quedó registrado en el historial.');
         } else {
             Logger::error('Error al actualizar estado del caso', ['id_expediente' => $id_expediente]);
@@ -231,6 +234,15 @@ class ExpedienteController extends Controller {
         }
 
         $this->redirect(BASE_URL . '/expediente/ver/' . $id_expediente);
+    }
+
+    // Nombre legible del paciente (para las descripciones de auditoría)
+    private function nombrePaciente($id_paciente) {
+        $paciente = $this->modelo('Paciente')->obtenerPorId((int)$id_paciente);
+        if ($paciente) {
+            return $paciente['nombres'] . ' ' . $paciente['apellidos'];
+        }
+        return 'paciente #' . (int)$id_paciente;
     }
 
     // Puente inteligente: Recibe el ID de la cita desde la agenda
@@ -297,6 +309,8 @@ class ExpedienteController extends Controller {
                     $modeloExpediente->marcarCitaComoAtendida($id_cita);
                 }
                 Logger::info('Sesión clínica guardada', ['id_expediente' => $id_expediente, 'id_cita' => $id_cita]);
+                $this->auditar('CREAR', 'sesion', (int)$exito, 'Sesión clínica registrada (' . $tipo_consulta
+                    . ') en el expediente #' . $id_expediente . '.');
                 Flash::success('Sesión clínica registrada correctamente.');
                 $this->redirect(BASE_URL . '/expediente/ver/' . $id_expediente);
             } else {

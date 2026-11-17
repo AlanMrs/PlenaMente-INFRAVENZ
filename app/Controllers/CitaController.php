@@ -8,19 +8,8 @@ use App\Core\Logger;
 class CitaController extends Controller {
 
     public function __construct() {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        if (!isset($_SESSION['usuario_id'])) {
-            header('Location: ' . BASE_URL . '/auth/login');
-            exit;
-        }
-
-        if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
-            header('Location: ' . BASE_URL . '/dashboard');
-            exit;
-        }
+        parent::__construct();
+        $this->requiere('citas');
     }
 
     // Listar citas (por defecto las del día actual, ordenadas cronológicamente, paginadas)
@@ -140,7 +129,10 @@ class CitaController extends Controller {
             $exito = $modeloCita->crearCita($id_paciente, $id_usuario_psicologo, $fecha_hora, $motivo);
 
             if ($exito) {
-                Logger::info('Cita creada', ['id_paciente' => $id_paciente, 'psicologo' => $id_usuario_psicologo]);
+                $idCita = (int)$exito;
+                Logger::info('Cita creada', ['id_cita' => $idCita, 'id_paciente' => $id_paciente, 'psicologo' => $id_usuario_psicologo]);
+                $this->auditar('CREAR', 'cita', $idCita, 'Cita programada para ' . $this->nombrePaciente($id_paciente)
+                    . ' el ' . date('d/m/Y g:i A', strtotime($fecha_hora)) . ' — ' . $motivo . '.');
                 Flash::success('Cita programada correctamente.');
                 header('Location: ' . BASE_URL . '/cita');
                 exit();
@@ -151,6 +143,53 @@ class CitaController extends Controller {
                 exit();
             }
         }
+    }
+
+    // Registrar una inasistencia: la cita ya paso de fecha y sigue Programada
+    public function inasistencia($id_cita) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect(BASE_URL . '/cita');
+        }
+
+        $modeloCita = $this->modelo('Cita');
+        $cita = $modeloCita->obtenerPorId((int)$id_cita);
+
+        if (!$cita) {
+            Flash::error('Cita no encontrada.');
+            $this->redirect(BASE_URL . '/cita');
+        }
+
+        if ($cita['estado_cita'] !== 'Programada') {
+            Flash::warning('Solo se pueden marcar como inasistencia las citas en estado Programada.');
+            $this->redirect(BASE_URL . '/cita/ver/' . $cita['id_cita']);
+        }
+
+        $ok = $modeloCita->marcarInasistencia((int)$cita['id_cita']);
+
+        if ($ok) {
+            $this->auditar('ACTUALIZAR', 'cita', (int)$cita['id_cita'], 'Cita marcada como inasistencia para '
+                . $cita['nombres'] . ' ' . $cita['apellidos']
+                . ' (programada para el ' . date('d/m/Y g:i A', strtotime($cita['fecha_hora'])) . ').');
+            Logger::info('Cita marcada como inasistencia', [
+                'id_cita' => $cita['id_cita'],
+                'usuario' => $_SESSION['usuario_id']
+            ]);
+            Flash::success('La cita se marcó como inasistencia.');
+        } else {
+            Logger::error('No se pudo marcar la cita como inasistencia', ['id_cita' => $cita['id_cita']]);
+            Flash::error('No se pudo marcar la cita como inasistencia.');
+        }
+
+        $this->redirect(BASE_URL . '/cita/ver/' . $cita['id_cita']);
+    }
+
+    // Nombre legible del paciente (para las descripciones de auditoría)
+    private function nombrePaciente($id_paciente) {
+        $paciente = $this->modelo('Paciente')->obtenerPorId((int)$id_paciente);
+        if ($paciente) {
+            return $paciente['nombres'] . ' ' . $paciente['apellidos'];
+        }
+        return 'paciente #' . (int)$id_paciente;
     }
 
     // Cancelar una cita: GET muestra el formulario con el motivo, POST lo registra
@@ -185,6 +224,9 @@ class CitaController extends Controller {
                     'usuario' => $id_usuario_cancela,
                     'motivo'  => $motivo
                 ]);
+                $this->auditar('ELIMINAR', 'cita', (int)$cita['id_cita'], 'Cita cancelada para '
+                    . $cita['nombres'] . ' ' . $cita['apellidos']
+                    . ' (programada para el ' . date('d/m/Y g:i A', strtotime($cita['fecha_hora'])) . '). Motivo: ' . $motivo . '.');
                 Flash::success('La cita fue cancelada correctamente. El cambio se refleja en la agenda.');
                 $this->redirect(BASE_URL . '/cita/ver/' . $cita['id_cita']);
             } else {
@@ -254,6 +296,10 @@ class CitaController extends Controller {
                     'despues'  => $fecha_hora
                 ]);
                 Flash::success('La cita fue reprogramada correctamente para el '
+                    . date('d/m/Y g:i A', strtotime($fecha_hora)) . '.');
+                $this->auditar('ACTUALIZAR', 'cita', (int)$cita['id_cita'], 'Cita reprogramada para '
+                    . $cita['nombres'] . ' ' . $cita['apellidos'] . ': de '
+                    . date('d/m/Y g:i A', strtotime($cita['fecha_hora'])) . ' a '
                     . date('d/m/Y g:i A', strtotime($fecha_hora)) . '.');
                 $this->redirect(BASE_URL . '/cita/ver/' . $cita['id_cita']);
             } else {

@@ -2,7 +2,9 @@
 require_once __DIR__ . '/../layouts/header.php';
 
 $estado = $cita['estado_cita'];
-$badge_color = $estado == 'Programada' ? '#ffc107' : ($estado == 'Completada' ? '#28a745' : '#dc3545');
+$badge_color = $estado == 'Programada' ? '#ffc107' : ($estado == 'Completada' ? '#28a745' : ($estado == 'Inasistencia' ? '#fd7e14' : '#dc3545'));
+// Cita Programada cuya fecha y hora ya pasaron: requiere actualizar su estado manualmente
+$citaVencida = ($estado === 'Programada' && strtotime($cita['fecha_hora']) < time());
 ?>
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -18,6 +20,24 @@ $badge_color = $estado == 'Programada' ? '#ffc107' : ($estado == 'Completada' ? 
             </div>
         <?php endforeach; ?>
     <?php endforeach; ?>
+<?php endif; ?>
+
+<?php if ($citaVencida): ?>
+    <div style="padding: 14px 18px; background-color: #fff3cd; color: #856404; border-left: 5px solid #ffc107; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div>
+            <strong>⚠️ Esta cita tiene la fecha vencida</strong>
+            <div style="font-size: 13px; margin-top: 3px;">
+                Ya pasó la fecha y hora programada, pero la cita sigue en estado <em>Programada</em>.
+                Actualice su estado: cancélela si no se atenderá o márquela como inasistencia.
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="<?php echo BASE_URL; ?>/cita/cancelar/<?php echo $cita['id_cita']; ?>" class="btn" style="background-color: #dc3545; border: none; color: white; text-decoration: none; padding: 8px 14px;">🚫 Cancelar cita</a>
+            <form method="POST" action="<?php echo BASE_URL; ?>/cita/inasistencia/<?php echo $cita['id_cita']; ?>" onsubmit="return confirm('¿Marcar esta cita como inasistencia?');">
+                <button type="submit" class="btn" style="background-color: #fd7e14; border: none; color: white; padding: 8px 14px; cursor: pointer;">🚫 Marcar inasistencia</button>
+            </form>
+        </div>
+    </div>
 <?php endif; ?>
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">

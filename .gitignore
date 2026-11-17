@@ -3,6 +3,8 @@
 # ==========================================
 # Ignorar el archivo real de conexión a BD para no filtrar contraseñas
 /app/Config/Database.php
+# Ignorar la clave real del buzon de correo (usar Correo.local.ejemplo.php como plantilla)
+/app/Config/Correo.local.php
 # Ignorar archivos de variables de entorno (si llegamos a usarlos)
 .env
 .env.*
@@ -30,6 +32,14 @@
 *.sqlite
 # ...EXCEPTO el script oficial de instalación que se menciona en el README
 !plenamente_bd.sql
+
+# ==========================================
+# Respaldos del Sistema (contienen datos clínicos sensibles)
+# ==========================================
+# Los archivos .sql.gz NO coinciden con *.sql, se ignoran de forma explicita
+/backups/*.sql.gz
+# ...pero la configuración de protección de la carpeta sí se versiona
+!/backups/.htaccess
 
 # ==========================================
 # Archivos del Sistema Operativo

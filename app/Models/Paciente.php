@@ -123,7 +123,7 @@ class Paciente {
         return $stmt->execute();
     }
 
-    // Detalle de registros dependientes del paciente (para validar la eliminación/desactivación)
+    // Detalle de registros dependientes del paciente (para validar la eliminación)
     public function contarDependencias($id_paciente) {
         $sql = "SELECT
                     (SELECT COUNT(*) FROM expedientes e WHERE e.id_paciente = :id1) AS expedientes,
@@ -153,15 +153,16 @@ class Paciente {
         return array_sum(array_map('intval', $dep)) > 0;
     }
 
-    // Desactivar (eliminar lógicamente) un paciente, conservando su historial
-    public function desactivar($id_paciente) {
+    // Eliminar un paciente (borrado lógico: el registro se conserva y el historial
+    // clínico permanece intacto; el paciente deja de aparecer en el directorio activo)
+    public function eliminar($id_paciente) {
         $sql = "UPDATE pacientes SET estado_paciente = 'Inactivo' WHERE id_paciente = :id";
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':id', $id_paciente, PDO::PARAM_INT);
+        $stmt->bindValue(':id', $id_paciente);
         return $stmt->execute();
     }
 
-    // Reactivar un paciente previamente desactivado
+    // Reactivar un paciente previamente eliminado (vuelve al directorio activo)
     public function reactivar($id_paciente) {
         $sql = "UPDATE pacientes SET estado_paciente = 'Activo' WHERE id_paciente = :id";
         $stmt = $this->db->prepare($sql);

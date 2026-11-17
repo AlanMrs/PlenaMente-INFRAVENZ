@@ -9,14 +9,7 @@ class AsistenciaController extends Controller {
 
     public function __construct() {
         parent::__construct();
-
-        if (!isset($_SESSION['usuario_id'])) {
-            $this->redirect(BASE_URL . '/auth/login');
-        }
-
-        if (!isset($_SESSION['id_rol']) || !in_array($_SESSION['id_rol'], [1, 2])) {
-            $this->redirect(BASE_URL . '/dashboard');
-        }
+        $this->requiere('asistencias');
     }
 
     public function index() {
@@ -35,10 +28,7 @@ class AsistenciaController extends Controller {
     }
 
     public function guardar() {
-        if ($_SESSION['id_rol'] != 1) {
-            Flash::error('Solo el psicólogo puede registrar asistencias.');
-            $this->redirect(BASE_URL . '/asistencia');
-        }
+        $this->requiere('asistencias.registrar', 'Solo el psicólogo puede registrar asistencias.');
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $fecha = $_POST['fecha_asistencia'] ?? '';
@@ -57,6 +47,9 @@ class AsistenciaController extends Controller {
 
             if ($exito) {
                 Logger::info('Asistencia registrada', ['id_expediente' => $id_expediente, 'fecha' => $fecha, 'estado' => $estado]);
+                $this->auditar('CREAR', 'asistencia', $id_expediente, 'Asistencia registrada el '
+                    . date('d/m/Y', strtotime($fecha)) . ' con estado "' . $estado . '" en el expediente #'
+                    . $id_expediente . '.');
                 Flash::success('Asistencia registrada correctamente.');
             } else {
                 Logger::error('Error al registrar asistencia', ['id_expediente' => $id_expediente, 'fecha' => $fecha]);

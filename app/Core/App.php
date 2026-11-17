@@ -1,6 +1,11 @@
 <?php
 namespace App\Core;
 
+// Nucleo de permisos y sincronizacion de sesion (sin autoloader)
+require_once __DIR__ . '/Flash.php';
+require_once __DIR__ . '/Permisos.php';
+require_once __DIR__ . '/Sesion.php';
+
 class App {
     // Definimos qué cargará por defecto si el usuario solo entra a la raíz
     protected $controladorActual = 'DashboardController';
@@ -8,6 +13,17 @@ class App {
     protected $parametros = [];
 
     public function __construct() {
+        // Sincroniza la sesion con la BD antes de ejecutar cualquier modulo:
+        // un cambio de rol o de estado se aplica de inmediato.
+        $sesion = Sesion::sincronizar();
+        if ($sesion['accion'] === 'logout') {
+            Flash::error($sesion['mensaje']);
+            if (!headers_sent()) {
+                header('Location: ' . BASE_URL . '/auth/login', true, 302);
+            }
+            exit;
+        }
+
         $url = $this->parseUrl();
 
         // BUSCAR EL CONTROLADOR

@@ -45,6 +45,29 @@
     </form>
 <?php endif; ?>
 
+<?php
+// Citas programadas cuya fecha y hora ya paso: requieren actualizacion manual de su estado
+$citasVencidas = 0;
+foreach ($citas as $cita) {
+    if (!empty($cita['cita_vencida'])) {
+        $citasVencidas++;
+    }
+}
+?>
+
+<?php if ($citasVencidas > 0): ?>
+    <div style="padding: 14px 18px; background-color: #fff3cd; color: #856404; border-left: 5px solid #ffc107; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div>
+            <strong>⚠️ <?php echo $citasVencidas; ?> cita(s) con fecha vencida</strong>
+            <div style="font-size: 13px; margin-top: 3px;">
+                Ya pasó la fecha y hora programada, pero la cita sigue en estado <em>Programada</em>.
+                Actualice su estado: cancélela si no se atenderá o márquela como inasistencia.
+            </div>
+        </div>
+        <span style="font-size: 12px; background: #fff; padding: 4px 10px; border-radius: 12px; border: 1px solid #ffc107;">Revise las filas marcadas</span>
+    </div>
+<?php endif; ?>
+
 <div class="card" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
     <?php if (empty($citas)): ?>
         <p style="text-align: center; color: #666; margin: 20px 0;">
@@ -71,7 +94,8 @@
             </thead>
             <tbody>
                 <?php foreach ($citas as $cita): ?>
-                    <tr style="border-bottom: 1px solid #eee;">
+                    <?php $vencida = !empty($cita['cita_vencida']); ?>
+                    <tr style="border-bottom: 1px solid #eee; <?php echo $vencida ? 'background-color: #fffaf0;' : ''; ?>">
                         <td style="padding: 12px;">
                             <strong><?php echo date('d/m/Y', strtotime($cita['fecha_hora'])); ?></strong><br>
                             <span style="color: #777; font-size: 13px;">⏰ <?php echo date('g:i A', strtotime($cita['fecha_hora'])); ?></span>
@@ -82,9 +106,14 @@
                         </td>
                         <td style="padding: 12px; color: #555; font-size: 14px;"><?php echo htmlspecialchars($cita['motivo_cita']); ?></td>
                         <td style="padding: 12px;">
-                            <span title="<?php echo ($cita['estado_cita'] == 'Cancelada' && !empty($cita['motivo_cancelacion'])) ? htmlspecialchars('Motivo: ' . $cita['motivo_cancelacion']) : ''; ?>" style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; background: <?php echo $cita['estado_cita'] == 'Programada' ? '#fff3cd; color: #856404;' : ($cita['estado_cita'] == 'Completada' ? '#d4edda; color: #155724;' : '#f8d7da; color: #721c24;'); ?>">
+                            <span title="<?php echo ($cita['estado_cita'] == 'Cancelada' && !empty($cita['motivo_cancelacion'])) ? htmlspecialchars('Motivo: ' . $cita['motivo_cancelacion']) : ''; ?>" style="padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; background: <?php echo $cita['estado_cita'] == 'Programada' ? '#fff3cd; color: #856404;' : ($cita['estado_cita'] == 'Completada' ? '#d4edda; color: #155724;' : ($cita['estado_cita'] == 'Inasistencia' ? '#ffe5b4; color: #8a4b00;' : '#f8d7da; color: #721c24;')); ?>">
                                 <?php echo $cita['estado_cita']; ?>
                             </span>
+                            <?php if ($vencida): ?>
+                                <br><span title="La fecha y hora de la cita ya pasaron y sigue Programada" style="display: inline-block; margin-top: 5px; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: bold; background: #fd7e14; color: white;">
+                                    ⚠️ Vencida
+                                </span>
+                            <?php endif; ?>
                         </td>
                         <td style="padding: 12px; text-align: center; white-space: nowrap;">
                             <a href="<?php echo BASE_URL; ?>/cita/ver/<?php echo $cita['id_cita']; ?>" class="btn btn-primary" style="background-color: var(--violeta-principal); border: none; padding: 6px 12px; font-size: 13px; text-decoration: none; color: white; border-radius: 4px; display: inline-block;">
@@ -100,6 +129,14 @@
                                 <a href="<?php echo BASE_URL; ?>/cita/cancelar/<?php echo $cita['id_cita']; ?>" class="btn" style="background-color: #dc3545; border: none; padding: 6px 12px; font-size: 13px; text-decoration: none; color: white; border-radius: 4px; display: inline-block;">
                                     🚫 Cancelar
                                 </a>
+                                <?php if ($vencida): ?>
+                                    <form method="POST" action="<?php echo BASE_URL; ?>/cita/inasistencia/<?php echo $cita['id_cita']; ?>" style="display: inline;"
+                                          onsubmit="return confirm('¿Marcar esta cita como inasistencia?');">
+                                        <button type="submit" class="btn" style="background-color: #fd7e14; border: none; padding: 6px 12px; font-size: 13px; color: white; border-radius: 4px; cursor: pointer; display: inline-block;">
+                                            🚫 Inasistencia
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                                 <form method="POST" action="<?php echo BASE_URL; ?>/recordatorio/enviar/<?php echo $cita['id_cita']; ?>" style="display: inline;">
                                     <button type="submit" class="btn" style="background-color: #6f42c1; border: none; padding: 6px 12px; font-size: 13px; color: white; border-radius: 4px; cursor: pointer; display: inline-block;">
                                         🔔 Recordatorio

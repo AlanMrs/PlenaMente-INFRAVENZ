@@ -13,19 +13,8 @@ class RecordatorioController extends Controller {
     private $horasVentana = 24;
 
     public function __construct() {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        if (!isset($_SESSION['usuario_id'])) {
-            header('Location: ' . BASE_URL . '/auth/login');
-            exit;
-        }
-
-        if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
-            header('Location: ' . BASE_URL . '/dashboard');
-            exit;
-        }
+        parent::__construct();
+        $this->requiere('recordatorios');
     }
 
     // Pantalla de recordatorios: próximas citas + historial de envíos
@@ -65,11 +54,24 @@ class RecordatorioController extends Controller {
             $this->redirect(BASE_URL . '/recordatorio');
         }
 
-        $destinatario = $cita['correo_paciente'];
+        $destinatario = trim($cita['correo_paciente']);
+
+        if (!filter_var($destinatario, FILTER_VALIDATE_EMAIL)) {
+            Logger::warning('Recordatorio no enviado: correo de destino invalido', [
+                'id_cita' => $cita['id_cita'],
+                'destinatario' => $destinatario
+            ]);
+            Flash::error('El correo registrado del paciente no es una dirección válida (' . $destinatario . '). Corríjelo en la ficha del paciente.');
+            $this->redirect(BASE_URL . '/recordatorio');
+        }
+
         $asunto = 'Recordatorio de cita psicológica - ' . date('d/m/Y g:i A', strtotime($cita['fecha_hora']));
         $mensaje = $this->construirMensaje($cita);
 
-        $enviado = Correo::enviar($destinatario, $asunto, $mensaje);
+        $diagnostico = null;
+        $enviado = Correo::enviar($destinatario, $asunto, $mensaje, $diagnostico);
+
+        // El estado se registra segun lo que realmente respondio el transporte
         $estado = $enviado ? 'Enviado' : 'Fallido';
 
         $modelo->registrarEnvio(
@@ -85,18 +87,91 @@ class RecordatorioController extends Controller {
             Logger::info('Recordatorio de cita enviado', [
                 'id_cita' => $cita['id_cita'],
                 'destinatario' => $destinatario,
+                'metodo' => $diagnostico['metodo'] ?? null,
+                'remitente' => $diagnostico['remitente'] ?? null,
                 'usuario' => $_SESSION['usuario_id']
             ]);
-            Flash::success('Recordatorio enviado a ' . $destinatario . '.');
+            Flash::success('Recordatorio enviado a ' . $destinatario . ' (método: ' . ($diagnostico['metodo'] ?? '-') . ').');
         } else {
+            $motivo = !empty($diagnostico['errores'])
+                ? implode(' | ', $diagnostico['errores'])
+                : 'el servidor de correo no confirmó la entrega';
             Logger::error('No se pudo enviar el recordatorio de cita', [
                 'id_cita' => $cita['id_cita'],
-                'destinatario' => $destinatario
+                'destinatario' => $destinatario,
+                'remitente' => $diagnostico['remitente'] ?? null,
+                'metodo' => $diagnostico['metodo'] ?? null,
+                'errores' => $diagnostico['errores'] ?? [],
+                'dialogo' => $diagnostico['dialogo'] ?? []
             ]);
-            Flash::error('No se pudo enviar el recordatorio (revisa la configuración de correo). El intento quedó registrado.');
+            Flash::error('No se pudo enviar el recordatorio: ' . $motivo
+                . ' Revise el diagnóstico de correo (📧 Diagnóstico) para más detalle.');
         }
 
         $this->redirect(BASE_URL . '/recordatorio');
+    }
+
+    /**
+     * Diagnostico de correo: muestra la configuracion vigente y permite enviar
+     * un correo de prueba para verificar la entrega en el hosting.
+     */
+    public function diagnostico() {
+        $config = Correo::config();
+        $smtp = $config['smtp'] ?? [];
+
+        $estado = [
+            'metodo'      => null,
+            'remitente'   => $config['remitente'] ?? '',
+            'nombre'      => $config['nombre_remitente'] ?? '',
+            'servidor'    => $smtp['host'] ?? '',
+            'puerto'      => $smtp['puerto'] ?? '',
+            'cifrado'     => $smtp['cifrado'] ?? '',
+            'usuario'     => $smtp['usuario'] ?? '',
+            'clave'       => !empty($smtp['clave']) ? 'Configurada' : 'NO configurada',
+            'smtp_posible'=> !empty($smtp['host']) && !empty($smtp['usuario']) && !empty($smtp['clave']),
+            'dominio'     => $_SERVER['SERVER_NAME'] ?? 'localhost',
+            'envio_local' => function_exists('mail')
+        ];
+
+        $resultado = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $destinatario = trim($_POST['destinatario'] ?? '');
+
+            if (!filter_var($destinatario, FILTER_VALIDATE_EMAIL)) {
+                Flash::error('Escribe una dirección de correo válida para la prueba.');
+                $this->redirect(BASE_URL . '/recordatorio/diagnostico');
+            }
+
+            $diagnostico = null;
+            $enviado = Correo::enviar(
+                $destinatario,
+                'Prueba de correo - PlenaMente INFRAVENZ',
+                '<h2>Prueba de envío</h2><p>Si recibes este mensaje, el envío de correo del sistema '
+                . '<strong>PlenaMente</strong> está funcionando correctamente.</p>'
+                . '<p>Fecha de la prueba: ' . date('d/m/Y H:i:s') . '</p>',
+                $diagnostico
+            );
+
+            Logger::info('Prueba de correo ejecutada', [
+                'destinatario' => $destinatario,
+                'resultado' => $enviado ? 'enviado' : 'fallido',
+                'metodo' => $diagnostico['metodo'] ?? null,
+                'errores' => $diagnostico['errores'] ?? []
+            ]);
+
+            $resultado = [
+                'enviado' => $enviado,
+                'destinatario' => $destinatario,
+                'diagnostico' => $diagnostico
+            ];
+        }
+
+        $this->vista('recordatorios/diagnostico', [
+            'estado'   => $estado,
+            'resultado'=> $resultado,
+            'flash'    => Flash::all()
+        ]);
     }
 
     // Construye el cuerpo HTML del recordatorio con fecha, hora y datos relevantes

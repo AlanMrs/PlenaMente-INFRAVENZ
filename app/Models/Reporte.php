@@ -60,6 +60,25 @@ class Reporte {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Resumen de la agenda de citas del paciente (total, programadas y proxima cita)
+    public function obtenerResumenCitas($id_expediente) {
+        $sql = "SELECT
+                    COUNT(*) AS total_citas,
+                    SUM(CASE WHEN c.estado_cita = 'Programada' THEN 1 ELSE 0 END) AS citas_programadas,
+                    SUM(CASE WHEN c.estado_cita = 'Completada' THEN 1 ELSE 0 END) AS citas_atendidas,
+                    SUM(CASE WHEN c.estado_cita = 'Cancelada' THEN 1 ELSE 0 END) AS citas_canceladas,
+                    MAX(CASE WHEN c.estado_cita = 'Programada' AND c.fecha_hora >= NOW() THEN c.fecha_hora END) AS proxima_cita,
+                    MAX(c.fecha_hora) AS ultima_cita
+                FROM citas c
+                INNER JOIN expedientes e ON c.id_paciente = e.id_paciente
+                WHERE e.id_expediente = :id_expediente";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_expediente', (int)$id_expediente, PDO::PARAM_INT);
+        $stmt->execute();
+        $fila = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $fila ?: ['total_citas' => 0, 'citas_programadas' => 0, 'citas_atendidas' => 0, 'citas_canceladas' => 0, 'proxima_cita' => null, 'ultima_cita' => null];
+    }
+
     // Guardar un informe técnico en la tabla reportes
     public function guardarReporte($id_expediente, $id_usuario_autor, $contenido_tecnico, $nivel_urgencia = 'Bajo') {
         $sql = "INSERT INTO reportes (id_expediente, id_usuario_autor, fecha_generacion, contenido_tecnico, nivel_urgencia) 

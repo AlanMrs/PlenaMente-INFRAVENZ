@@ -9,14 +9,7 @@ class PacienteController extends Controller {
 
     public function __construct() {
         parent::__construct();
-        
-        if (!isset($_SESSION['usuario_id'])) {
-            $this->redirect(BASE_URL . '/auth/login');
-        }
-
-        if (!isset($_SESSION['id_rol']) || $_SESSION['id_rol'] !== 1) {
-            $this->redirect(BASE_URL . '/dashboard');
-        }
+        $this->requiere('pacientes');
     }
     
     // Método para listar los pacientes
@@ -74,6 +67,8 @@ class PacienteController extends Controller {
 
             if ($exito) {
                 Logger::info('Paciente creado', ['nie_dui' => $nie_dui, 'nombres' => $nombres, 'apellidos' => $apellidos]);
+                $this->auditar('CREAR', 'paciente', 0, 'Paciente creado: ' . $nombres . ' ' . $apellidos
+                    . ' (NIE/DUI ' . $nie_dui . ', ' . $tipo_paciente . ').');
                 Flash::success('Paciente registrado correctamente.');
                 $this->redirect(BASE_URL . '/paciente');
             } else {
@@ -182,7 +177,7 @@ class PacienteController extends Controller {
 
         if ($exito) {
             $nombreCompleto = $nombres . ' ' . $apellidos;
-            $this->registrarAuditoria('ACTUALIZAR', 'paciente', $id_paciente, 'Datos del paciente actualizados: '
+            $this->auditar('ACTUALIZAR', 'paciente', $id_paciente, 'Datos del paciente actualizados: '
                 . $nombreCompleto . ' (NIE/DUI ' . $nie_dui . '). Campos modificados: '
                 . (empty($cambios) ? 'ninguno' : implode(', ', $cambios)) . '.');
             Logger::info('Paciente actualizado', [
@@ -295,7 +290,7 @@ class PacienteController extends Controller {
         }
 
         if (($paciente['estado_paciente'] ?? 'Activo') !== 'Activo') {
-            Flash::warning('El paciente ya se encuentra inactivo.');
+            Flash::warning('El paciente ya fue eliminado del directorio.');
             $this->redirect(BASE_URL . '/paciente');
         }
 
@@ -318,18 +313,19 @@ class PacienteController extends Controller {
                 }
             }
 
-            $ok = $pacienteModel->desactivar((int)$paciente['id_paciente']);
+            $ok = $pacienteModel->eliminar((int)$paciente['id_paciente']);
 
             if ($ok) {
                 $nombreCompleto = $paciente['nombres'] . ' ' . $paciente['apellidos'];
-                $descripcion = 'Paciente desactivado (eliminación lógica): ' . $nombreCompleto
-                    . ' (NIE/DUI ' . $paciente['nie_dui'] . '). Registros asociados: ' . $this->resumenDependencias($dependencias) . '.';
-                $this->registrarAuditoria('DESACTIVAR', 'paciente', (int)$paciente['id_paciente'], $descripcion);
-                Logger::info('Paciente desactivado', ['id_paciente' => $paciente['id_paciente'], 'usuario' => $_SESSION['usuario_id']]);
-                Flash::success('El paciente ' . $nombreCompleto . ' fue desactivado. Su historial se conserva.');
+                $descripcion = 'Paciente eliminado del directorio: ' . $nombreCompleto
+                    . ' (NIE/DUI ' . $paciente['nie_dui'] . '). Registros asociados que se conservan: '
+                    . $this->resumenDependencias($dependencias) . '.';
+                $this->auditar('ELIMINAR', 'paciente', (int)$paciente['id_paciente'], $descripcion);
+                Logger::info('Paciente eliminado', ['id_paciente' => $paciente['id_paciente'], 'usuario' => $_SESSION['usuario_id']]);
+                Flash::success('El paciente ' . $nombreCompleto . ' fue eliminado del directorio. Su historial clínico se conserva.');
             } else {
-                Logger::error('Error al desactivar paciente', ['id_paciente' => $paciente['id_paciente']]);
-                Flash::error('No se pudo desactivar el paciente.');
+                Logger::error('Error al eliminar paciente', ['id_paciente' => $paciente['id_paciente']]);
+                Flash::error('No se pudo eliminar el paciente.');
             }
             $this->redirect(BASE_URL . '/paciente');
         }
@@ -342,7 +338,7 @@ class PacienteController extends Controller {
         ]);
     }
 
-    // Reactivar un paciente previamente desactivado
+    // Reactivar un paciente previamente eliminado (vuelve a estar disponible)
     public function reactivar($id_paciente) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect(BASE_URL . '/paciente');
@@ -360,30 +356,15 @@ class PacienteController extends Controller {
 
         if ($ok) {
             $nombreCompleto = $paciente['nombres'] . ' ' . $paciente['apellidos'];
-            $this->registrarAuditoria('REACTIVAR', 'paciente', (int)$paciente['id_paciente'], 'Paciente reactivado: ' . $nombreCompleto . ' (NIE/DUI ' . $paciente['nie_dui'] . ').');
+            $this->auditar('REACTIVAR', 'paciente', (int)$paciente['id_paciente'], 'Paciente reactivado (restaurado al directorio): ' . $nombreCompleto . ' (NIE/DUI ' . $paciente['nie_dui'] . ').');
             Logger::info('Paciente reactivado', ['id_paciente' => $paciente['id_paciente'], 'usuario' => $_SESSION['usuario_id']]);
-            Flash::success('Paciente ' . $nombreCompleto . ' reactivado correctamente.');
+            Flash::success('El paciente ' . $nombreCompleto . ' fue reactivado y vuelve a estar disponible en el directorio.');
         } else {
             Logger::error('Error al reactivar paciente', ['id_paciente' => $paciente['id_paciente']]);
             Flash::error('No se pudo reactivar el paciente.');
         }
 
         $this->redirect(BASE_URL . '/paciente?inactivos=1');
-    }
-
-    // Registrar en la tabla de auditoría (sin interrumpir la operación si falla)
-    private function registrarAuditoria($accion, $entidad, $id_entidad, $descripcion) {
-        try {
-            $this->modelo('Auditoria')->registrar(
-                (int)($_SESSION['usuario_id'] ?? 0),
-                $accion,
-                $entidad,
-                $id_entidad,
-                $descripcion
-            );
-        } catch (\Throwable $e) {
-            Logger::error('No se pudo registrar la acción en auditoría', ['error' => $e->getMessage()]);
-        }
     }
 
     // Texto legible del detalle de registros asociados al paciente

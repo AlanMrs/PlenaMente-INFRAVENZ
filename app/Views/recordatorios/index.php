@@ -1,8 +1,11 @@
 <?php require_once __DIR__ . '/../layouts/header.php'; ?>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 12px; flex-wrap: wrap;">
     <h2 style="color: var(--violeta-principal); margin: 0;">🔔 Recordatorios de Citas</h2>
-    <a href="<?php echo BASE_URL; ?>/cita" class="btn btn-secondary">📅 Ir a la Agenda</a>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="<?php echo BASE_URL; ?>/recordatorio/diagnostico" class="btn" style="background-color: #17a2b8; border: none; color: white; text-decoration: none;">📧 Diagnóstico</a>
+        <a href="<?php echo BASE_URL; ?>/cita" class="btn btn-secondary">📅 Ir a la Agenda</a>
+    </div>
 </div>
 
 <?php if (!empty($flash)): ?>

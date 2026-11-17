@@ -24,13 +24,31 @@ class Usuario {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Obtener todos los usuarios 
+    // Obtener todos los usuarios con el nombre de su rol
     public function obtenerTodos() {
-        $sql = "SELECT * FROM usuarios ORDER BY id_usuario DESC";
+        $sql = "SELECT u.*, r.nombre_rol 
+                FROM usuarios u 
+                INNER JOIN roles r ON u.id_rol = r.id_rol 
+                ORDER BY u.id_usuario DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Contar usuarios activos que tienen asignado un rol (para proteger al ultimo administrador)
+    public function contarActivosPorRol($id_rol, $excluir_id = null) {
+        $sql = "SELECT COUNT(*) FROM usuarios WHERE id_rol = :id_rol AND estado = 'Activo'";
+        if ($excluir_id !== null) {
+            $sql .= " AND id_usuario <> :id";
+        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_rol', (int)$id_rol, PDO::PARAM_INT);
+        if ($excluir_id !== null) {
+            $stmt->bindValue(':id', (int)$excluir_id, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
     }
 
     // Obtener un usuario específico por su ID

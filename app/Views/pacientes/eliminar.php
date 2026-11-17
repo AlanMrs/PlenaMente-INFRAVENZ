@@ -55,7 +55,7 @@ $etiquetasDep = [
         <div style="background: #f8d7da; border-left: 5px solid #dc3545; padding: 16px 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="margin: 0 0 8px 0; color: #721c24;">⚠️ Este paciente tiene información crítica</h3>
             <p style="margin: 0 0 12px 0; color: #721c24;">
-                El paciente posee <strong><?php echo $totalDependencias; ?></strong> registro(s) asociado(s) que no deben perderse. Por seguridad, el sistema <strong>no elimina</strong> estos datos: se realizará una <strong>eliminación lógica (desactivación)</strong> y el historial clínico se conservará.
+                El paciente posee <strong><?php echo $totalDependencias; ?></strong> registro(s) asociado(s) que no deben perderse. Por seguridad, el sistema <strong>no elimina</strong> estos datos: se realizará una <strong>eliminación</strong> del paciente y el historial clínico se conservará.
             </p>
             <ul style="margin: 0; color: #721c24;">
                 <?php foreach ($etiquetasDep as $clave => $etiqueta): ?>
@@ -80,7 +80,7 @@ $etiquetasDep = [
                 <div style="margin-bottom: 22px;">
                     <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 14px; color: #721c24;">
                         <input type="checkbox" name="aceptar" value="1" required style="margin-top: 3px;">
-                        <span>Entiendo que el paciente será <strong>desactivado</strong> y que su información clínica se conservará en el sistema.</span>
+                        <span>Entiendo que el paciente será <strong>eliminado</strong> del directorio y que su información clínica se conservará en el sistema.</span>
                     </label>
                 </div>
 
@@ -97,7 +97,7 @@ $etiquetasDep = [
         <div style="background: #fff3cd; border-left: 5px solid #ffc107; padding: 16px 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="margin: 0 0 8px 0; color: #856404;">⚠️ Confirmar acción</h3>
             <p style="margin: 0; color: #856404;">
-                Este paciente no tiene expediente, citas, sesiones, reportes ni asistencias registradas. Se realizará una <strong>eliminación lógica</strong> (el registro se conserva, pero dejará de aparecer en el directorio activo).
+                Este paciente no tiene expediente, citas, sesiones, reportes ni asistencias registradas. Se realizará la <strong>eliminación</strong> del paciente (el registro se conserva, pero dejará de aparecer en el directorio activo).
             </p>
         </div>
 

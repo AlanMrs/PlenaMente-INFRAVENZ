@@ -14,7 +14,8 @@ class Cita {
 
     // Traer las citas unidas con los nombres del paciente (con rango de fechas y paginación opcionales)
     public function obtenerTodas($limit = null, $offset = 0, $desde = null, $hasta = null) {
-        $sql = "SELECT c.*, p.nombres, p.apellidos, p.nie_dui 
+        $sql = "SELECT c.*, p.nombres, p.apellidos, p.nie_dui,
+                       CASE WHEN c.estado_cita = 'Programada' AND c.fecha_hora < NOW() THEN 1 ELSE 0 END AS cita_vencida
                 FROM citas c
                 INNER JOIN pacientes p ON c.id_paciente = p.id_paciente";
         list($cond, $params) = $this->filtroFechas($desde, $hasta);
@@ -64,25 +65,29 @@ class Cita {
         }
         return [$cond, $params];
     }
-
-    // Insertar la cita
+    // Insertar la cita. Devuelve el identificador de la nueva cita o false.
     public function crearCita($id_paciente, $id_usuario_psicologo, $fecha_hora, $motivo_cita) {
         $sql = "INSERT INTO citas (id_paciente, id_usuario_psicologo, fecha_hora, motivo_cita, estado_cita) 
                 VALUES (:id_paciente, :id_psicologo, :fecha_hora, :motivo, 'Programada')";
-        
+            
         $stmt = $this->db->prepare($sql);
+        
         $stmt->bindValue(':id_paciente', $id_paciente);
         $stmt->bindValue(':id_psicologo', $id_usuario_psicologo);
         $stmt->bindValue(':fecha_hora', $fecha_hora);
         $stmt->bindValue(':motivo', $motivo_cita);
-        
-        return $stmt->execute();
+            
+        if ($stmt->execute()) {
+            return (int)$this->db->lastInsertId();
+        }
+        return false;
     }
 
     // Citas del día actual, ordenadas cronológicamente (con paginación opcional)
     public function obtenerCitasHoy($limit = null, $offset = 0) {
         $sql = "SELECT c.*, p.nombres, p.apellidos, p.nie_dui, p.tipo_paciente, p.grado_seccion,
-                       p.telefono_contacto, e.id_expediente
+                       p.telefono_contacto, e.id_expediente,
+                       CASE WHEN c.estado_cita = 'Programada' AND c.fecha_hora < NOW() THEN 1 ELSE 0 END AS cita_vencida
                 FROM citas c
                 INNER JOIN pacientes p ON c.id_paciente = p.id_paciente
                 LEFT JOIN expedientes e ON p.id_paciente = e.id_paciente
@@ -160,6 +165,15 @@ class Cita {
         }
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Marcar una cita como inasistencia (solo si sigue Programada)
+    public function marcarInasistencia($id_cita) {
+        $sql = "UPDATE citas SET estado_cita = 'Inasistencia' WHERE id_cita = :id AND estado_cita = 'Programada'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id', (int)$id_cita, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
     }
 
     // Reprogramar una cita (fecha y hora), solo si sigue en estado Programada
